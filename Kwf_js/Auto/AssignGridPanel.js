@@ -1,5 +1,12 @@
-Kwf.Auto.AssignGridPanel = Ext2.extend(Kwf.Binding.ProxyPanel, {
-
+Ext.define('Kwf.Auto.AssignGridPanel', {
+    extend: 'Kwf.Binding.ProxyPanel',
+    alias: 'widget.kwf.assigngrid',
+    requires: [
+        'Ext.Action',
+        'Kwf.Auto.AssignedGridPanel',
+        'Ext.selection.CheckboxModel',
+        'Kwf.Auto.GridPanel'
+    ],
     gridAssignedControllerUrl: '',
     gridDataControllerUrl: '',
     textAssignActionUrl: null,
@@ -11,14 +18,10 @@ Kwf.Auto.AssignGridPanel = Ext2.extend(Kwf.Binding.ProxyPanel, {
 
     initComponent: function()
     {
-        this.addEvents({
-            'assigned': true
-        });
-
-        this.actions.assign = new Ext2.Action({
+        this.actions.assign = new Ext.Action({
             text    : trlKwf('Assign'),
             icon    : '/assets/silkicons/table_relationship.png',
-            cls     : 'x2-btn-text-icon',
+            cls     : 'x-btn-text-icon',
             disabled: true,
             handler : this.onAssign,
             scope   : this
@@ -33,7 +36,7 @@ Kwf.Auto.AssignGridPanel = Ext2.extend(Kwf.Binding.ProxyPanel, {
             textAssignActionUrl: this.textAssignActionUrl,
             region: 'center',
             gridConfig: {
-                selModel: new Ext2.grid.CheckboxSelectionModel()
+                selModel: new Ext.selection.CheckboxModel()
             }
         });
         this.proxyItem = this.gridAssigned;
@@ -45,7 +48,7 @@ Kwf.Auto.AssignGridPanel = Ext2.extend(Kwf.Binding.ProxyPanel, {
             controllerUrl: this.gridDataControllerUrl,
             gridConfig: {
                 tbar: [ this.getAction('assign'), '-' ],
-                selModel: new Ext2.grid.CheckboxSelectionModel()
+                selModel: new Ext.selection.CheckboxModel()
             },
             autoLoad: this.autoLoad
         });
@@ -77,7 +80,7 @@ Kwf.Auto.AssignGridPanel = Ext2.extend(Kwf.Binding.ProxyPanel, {
 
         this.items = [this.gridAssigned, this.gridData];
 
-        Kwf.Auto.AssignGridPanel.superclass.initComponent.call(this);
+        this.callParent(arguments);
     },
 
     onAssign : function()
@@ -92,9 +95,9 @@ Kwf.Auto.AssignGridPanel = Ext2.extend(Kwf.Binding.ProxyPanel, {
                 params[this.gridDataParamName].push(selections[i].id);
             }
         }
-        params[this.gridDataParamName] = Ext2.encode(params[this.gridDataParamName]);
+        params[this.gridDataParamName] = Ext.encode(params[this.gridDataParamName]);
 
-        Ext2.Ajax.request({
+        Ext.Ajax.request({
             url: this.assignActionUrl,
             params: params,
             success: function() {
@@ -111,11 +114,11 @@ Kwf.Auto.AssignGridPanel = Ext2.extend(Kwf.Binding.ProxyPanel, {
     },
 
     setAutoLoad: function(v) {
-        Kwf.Auto.AssignGridPanel.superclass.setAutoLoad.apply(this, arguments);
+        this.callParent(arguments);
         this.gridData.setAutoLoad(v);
     },
     load: function() {
-        Kwf.Auto.AssignGridPanel.superclass.load.apply(this, arguments);
+        this.callParent(arguments);
 
         //wenn autoLoad=false
         if (!this.gridData.getStore()) {
@@ -126,15 +129,13 @@ Kwf.Auto.AssignGridPanel = Ext2.extend(Kwf.Binding.ProxyPanel, {
     setBaseParams: function(bp) {
         this.gridAssigned.setBaseParams(bp);
         this.gridData.setBaseParams(bp);
-        return Kwf.Auto.AssignGridPanel.superclass.setBaseParams.call(this, bp);
+        return this.callParent(arguments);
     },
 
     applyBaseParams: function(bp) {
         this.gridAssigned.applyBaseParams(bp);
         this.gridData.applyBaseParams(bp);
-        return Kwf.Auto.AssignGridPanel.superclass.applyBaseParams.call(this, bp);
+        return this.callParent(arguments);
     }
 
 });
-
-Ext2.reg('kwf.assigngrid', Kwf.Auto.AssignGridPanel);

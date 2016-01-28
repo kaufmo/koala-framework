@@ -401,7 +401,7 @@ new Ext2.Panel({
                     var box = this.proxy.getBox();
                     p.updateBox(box);
                     if (p.layout) {
-                        p.doLayout();
+                        p.updateLayout();
                     }
                     return box;
                 }

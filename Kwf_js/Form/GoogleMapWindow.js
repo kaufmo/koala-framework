@@ -1,11 +1,12 @@
-Kwf.Form.GoogleMapWindow = Ext2.extend(Ext2.Window,
-{
+Ext.define('Kwf.Form.GoogleMapWindow', {
+    extend: 'Ext.window.Window',
+    requires: [
+        'Ext.Action',
+        'Ext.window.MessageBox'
+    ],
     initComponent: function() {
-        this.addEvents('confirm');
-        this.addEvents('clear');
-
         this.actions = {};
-        this.actions.clear = new Ext2.Action({
+        this.actions.clear = new Ext.Action({
             text:trlKwf('Clear'),
             handler: function() {
                 this.clear = true;
@@ -13,7 +14,7 @@ Kwf.Form.GoogleMapWindow = Ext2.extend(Ext2.Window,
                 this.hide();
             },
             icon    : '/assets/silkicons/bin_closed.png',
-            cls     : 'x2-btn-text-icon',
+            cls     : 'x-btn-text-icon',
             scope : this}
         );
 
@@ -23,7 +24,7 @@ Kwf.Form.GoogleMapWindow = Ext2.extend(Ext2.Window,
             text:trlKwf('Search Location'),
             handler: this.addressPrompt,
             icon    : '/assets/silkicons/zoom.png',
-            cls     : 'x2-btn-text-icon',
+            cls     : 'x-btn-text-icon',
             scope : this
         }, this.actions.clear);
 
@@ -43,11 +44,11 @@ Kwf.Form.GoogleMapWindow = Ext2.extend(Ext2.Window,
             },
             scope: this
         }];
-        Kwf.Form.GoogleMapWindow.superclass.initComponent.call(this);
+        this.callParent(arguments);
     },
     afterRender:function(){
         var startLatLng = new google.maps.LatLng(47.8904081, 13.1834356);
-        Kwf.Form.GoogleMapWindow.superclass.afterRender.call(this);
+        this.callParent(arguments);
         Kwf.GoogleMap.Loader.load(function() {
             var mapOptions = {
                 center: startLatLng,
@@ -76,7 +77,7 @@ Kwf.Form.GoogleMapWindow = Ext2.extend(Ext2.Window,
         }, this);
     },
     addressPrompt:function(){
-        Ext2.Msg.prompt(trlKwf('enter address'), trlKwf('Example')+': Landesstraße 23, 5302 Henndorf am Wallersee', function(btn, text){
+        Ext.Msg.prompt(trlKwf('enter address'), trlKwf('Example')+': Landesstraße 23, 5302 Henndorf am Wallersee', function(btn, text){
             if (btn == 'ok' && text != ''){
                 this.geoCodeLookup(text);
             }

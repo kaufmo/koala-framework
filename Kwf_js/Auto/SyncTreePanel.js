@@ -1,6 +1,17 @@
-Ext2.namespace('Kwf.Auto');
-Kwf.Auto.SyncTreePanel = Ext2.extend(Kwf.Binding.AbstractPanel, {
-
+Ext.define('Kwf.Auto.SyncTreePanel', {
+    extend: 'Kwf.Binding.AbstractPanel',
+    alias: 'widget.kwf.autotreesync',
+    requires: [
+        'Ext.Action',
+        'Kwf.Connection',
+        'Kwf.Auto.FilterCollection',
+        'Kwf.Auto.Tree.Panel',
+        'Ext.data.TreeStore',
+        'Ext.data.TreeModel',
+        'Kwf.Auto.Form.Window',
+        'Ext.window.MessageBox',
+        'Ext.tree.plugin.TreeViewDragDrop'
+    ],
     layout: 'fit',
 
     initComponent : function()
@@ -11,48 +22,46 @@ Kwf.Auto.SyncTreePanel = Ext2.extend(Kwf.Binding.AbstractPanel, {
             delete this.autoLoad;
         }
 
-        this.addEvents(
-            'selectionchange',
-            'editaction',
-            'addaction'
-        );
-        this.actions['delete'] = new Ext2.Action({
+        this.actions['delete'] = new Ext.Action({
             text    : trlKwf('Delete'),
             handler : this.onDelete,
-            cls     : 'x2-btn-text-icon',
+            cls     : 'x-btn-text-icon',
             disabled: true,
             scope   : this
         });
-        this.actions.add = new Ext2.Action({
+        this.actions.add = new Ext.Action({
             text    : trlKwf('Add'),
-            handler : this.onAdd,
-            cls     : 'x2-btn-text-icon',
+            handler : this.onAddRecord,
+            cls     : 'x-btn-text-icon',
             scope   : this
         });
-        this.actions.edit = new Ext2.Action({
+        this.actions.edit = new Ext.Action({
             text    : trlKwf('Edit'),
             handler : this.onEdit,
-            cls     : 'x2-btn-text-icon',
+            cls     : 'x-btn-text-icon',
             disabled: true,
             scope   : this
         });
-        this.actions.invisible = new Ext2.Action({
+        this.actions.invisible = new Ext.Action({
             text    : trlKwf('Toggle Visibility'),
             handler : this.onVisible,
-            cls     : 'x2-btn-text-icon',
+            cls     : 'x-btn-text-icon',
             disabled: true,
             scope   : this
         });
-        this.actions.reload = new Ext2.Action({
+        this.actions.reload = new Ext.Action({
             text    : '',
             handler : function () { this.reload(); },
             icon    : '/assets/silkicons/arrow_rotate_clockwise.png',
-            cls     : 'x2-btn-icon',
+            cls     : 'x-btn-icon',
             tooltip : trlKwf('Reload'),
             scope   : this
         });
 
-        Kwf.Auto.SyncTreePanel.superclass.initComponent.call(this);
+        this.callParent(arguments);
+        if (this.autoLoad) {
+            this.on('render', this.doAutoLoad, this, {delay:10});
+        }
     },
     
     doAutoLoad : function()
@@ -67,7 +76,7 @@ Kwf.Auto.SyncTreePanel = Ext2.extend(Kwf.Binding.AbstractPanel, {
     {
         if (!this.metaConn) this.metaConn = new Kwf.Connection({ autoAbort: true });
         this.metaConn.request({
-            mask: this.el || Ext2.getBody(),
+            mask: this.el || Ext.getBody(),
             url: this.controllerUrl + '/json-meta',
             params: this.baseParams,
             success: this.onMetaChange,
@@ -77,23 +86,18 @@ Kwf.Auto.SyncTreePanel = Ext2.extend(Kwf.Binding.AbstractPanel, {
     
     reload: function()
     {
-    	this.tree.un('collapsenode', this.onCollapseNode, this);
-    	this.tree.un('expandnode', this.onExpandNode, this);
-    	this.tree.initMask();
-    	var node = this.getSelectedNode();
-    	if (!node || !node.getOwnerTree()) {
-    		this.tree.getRootNode().reload();
-    	} else {
-            var path = node.getPath();
-            this.tree.initialConfig.loader.baseParams.openedId = node.id;
-            this.tree.getRootNode().reload(
-                function(node){
-                    var tree = node.getOwnerTree();
-                    tree.selectPath(path);
-                    delete tree.initialConfig.loader.baseParams.openedId;
-                }
-            );
-    	}
+        this.tree.un('collapsenode', this.onCollapseNode, this);
+        this.tree.un('expandnode', this.onExpandNode, this);
+        var node = this.getSelection().length ? this.getSelection()[0] : null;
+        if (!node || !node.getOwnerTree()) {
+            this.tree.getStore().reload();
+        } else {
+            this.tree.getStore().reload({
+                params: Ext.apply(this.tree.getStore().getProxy().extraParams, {
+                    openedId: node.get('id')
+                })
+            });
+        }
     },
 
     onMetaChange: function(response, options, meta) {
@@ -125,22 +129,41 @@ Kwf.Auto.SyncTreePanel = Ext2.extend(Kwf.Binding.AbstractPanel, {
         // Tree
         var baseParams = this.baseParams != undefined ? this.baseParams : {};
         if (this.openedId != undefined) { baseParams.openedId = this.openedId; }
+
+        var viewConfig = null;
+        if (meta.enableDD) {
+            viewConfig = {
+                plugins: {
+                    ptype: 'treeviewdragdrop',
+                    pluginId: 'treeviewdragdrop',
+                    containerScroll: true
+                }
+            };
+            if (meta.dropConfig) viewConfig.plugins = Ext.apply(viewConfig.plugins, meta.dropConfig);
+        }
+
         this.tree = new Kwf.Auto.Tree.Panel({
-            border      : false,
+            border: false,
+            hideHeaders: true,
 //            animate     : true,
-            loader      : new Ext2.tree.TreeLoader({
-                baseParams  : baseParams,
-                dataUrl     : this.controllerUrl + '/json-data'
+            store: new Ext.data.TreeStore({
+                defaultRootProperty: 'nodes',
+                folderSort: meta.enableDD,
+                proxy: {
+                    type: 'ajax',
+                    reader: 'json',
+                    extraParams: baseParams,
+                    url: this.controllerUrl + '/json-data'
+                }
             }),
-            enableDD    : meta.enableDD,
-            autoScroll: true,
+            viewConfig  : viewConfig,
+            autoScroll  : true,
             rootVisible : meta.rootVisible,
-            tbar        : tbar,
-            dropConfig  : meta.dropConfig
+            tbar        : tbar
         });
 
         this.tree.setRootNode(
-            new Ext2.tree.AsyncTreeNode({
+            new Ext.data.TreeModel({
                 text: meta.rootText,
                 id: '0',
                 allowDrag: false
@@ -149,30 +172,30 @@ Kwf.Auto.SyncTreePanel = Ext2.extend(Kwf.Binding.AbstractPanel, {
 
         this.tree.getSelectionModel().on('selectionchange', this.onSelectionchange, this);
         this.tree.getSelectionModel().on('beforeselect', function(selModel, newNode, oldNode) {
-            return this.fireEvent('beforeselectionchange', newNode.attributes.id);
+            return this.fireEvent('beforeselectionchange', newNode.get('id'));
         }, this);
-        this.tree.on('beforenodedrop', this.onMove, this);
+        this.tree.getView().on('beforedrop', this.onMove, this);
 
-        this.tree.on('load', function(node) {
+        this.tree.on('load', function(store, records, success, operation, node) {
             if (this.openedId == node.id) {
                 node.select();
             }
             return true;
         }, this);
-        
-        this.tree.getLoader().on('load', function(node) {
-        	this.tree.on('collapsenode', this.onCollapseNode, this);
-        	this.tree.on('expandnode', this.onExpandNode, this);
+
+        this.tree.getStore().on('load', function(node) {
+            this.tree.on('collapsenode', this.onCollapseNode, this);
+            this.tree.on('expandnode', this.onExpandNode, this);
         }, this);
 
         this.relayEvents(this.tree, ['click', 'dblclick']);
 
         this.add(this.tree);
-        this.doLayout();
+        this.updateLayout();
 
         this.tree.getRootNode().expand();
         if (meta.rootVisible) {
-            this.tree.getRootNode().ui.iconNode.style.backgroundImage = 'url(' + meta.icons.root + ')';
+            this.tree.getRootNode().set('icon', meta.icons.root);
             this.tree.getRootNode().select();
         }
 
@@ -187,7 +210,7 @@ Kwf.Auto.SyncTreePanel = Ext2.extend(Kwf.Binding.AbstractPanel, {
                 if (o.data.addedId != undefined) {
                     id = o.data.addedId;
                 } else {
-                    id = this.tree.getSelectionModel().getSelectedNode().id;
+                    id = this.tree.getSelectionModel().getSelection().id;
                 }
                 this.onSave(id);
             }, this);
@@ -203,7 +226,7 @@ Kwf.Auto.SyncTreePanel = Ext2.extend(Kwf.Binding.AbstractPanel, {
     },
 
     onEdit : function (o, e) {
-        var node = this.tree.getSelectionModel().getSelectedNode();
+        var node = this.tree.getSelectionModel().getSelection();
         if (!node.id || node.id === 0 || node.id === '0') return;
         if (this.editDialog != undefined) {
             this.editDialog.showEdit(node.id);
@@ -212,23 +235,23 @@ Kwf.Auto.SyncTreePanel = Ext2.extend(Kwf.Binding.AbstractPanel, {
         }
     },
 
-    onAdd: function (o, e) {
+    onAddRecord: function (o, e) {
         if (this.editDialog != undefined) {
             this.editDialog.getAutoForm().applyBaseParams({
                 parent_id: this.getSelectedId()
             });
             this.editDialog.showAdd();
         } else {
-            this.fireEvent('addaction', this.tree.getSelectionModel().getSelectedNode());
+            this.fireEvent('addaction', this.tree.getSelectionModel().getSelection());
         }
     },
 
     onSave : function (id)
     {
-        Ext2.Ajax.request({
+        Ext.Ajax.request({
             url: this.controllerUrl + '/json-node-data',
             mask: this.body,
-            params: Ext2.apply({node:id}, this.getBaseParams()),
+            params: Ext.apply({node:id}, this.getBaseParams()),
             success: function(response, options, result) {
                 this.onSaved(result.data);
             },
@@ -250,13 +273,13 @@ Kwf.Auto.SyncTreePanel = Ext2.extend(Kwf.Binding.AbstractPanel, {
     },
 
     onDelete: function (o, e) {
-        Ext2.MessageBox.confirm(trlKwf('Delete'), trlKwf('Do you really want to delete this entry:\n\n"') + this.tree.getSelectionModel().getSelectedNode().text + '"',
+        Ext.MessageBox.confirm(trlKwf('Delete'), trlKwf('Do you really want to delete this entry:\n\n"') + this.tree.getSelectionModel().getSelection().text + '"',
             function  (button) {
                 if (button == 'yes') {
-                    Ext2.Ajax.request({
+                    Ext.Ajax.request({
                         url: this.controllerUrl + '/json-delete',
                         mask: this.body,
-                        params: Ext2.apply({id:this.getSelectedId()}, this.getBaseParams()),
+                        params: Ext.apply({id:this.getSelectedId()}, this.getBaseParams()),
                         success: function(response, options, result) {
                             this.onDeleted(result);
                         },
@@ -268,55 +291,57 @@ Kwf.Auto.SyncTreePanel = Ext2.extend(Kwf.Binding.AbstractPanel, {
         );
     },
 
-    onMove : function(dropEvent){
+    onMove : function(node, data, overModel, dropPosition, dropHandlers) {
         var params = this.getBaseParams();
-        params.source = dropEvent.dropNode.id;
-        params.target = dropEvent.target.id;
-        params.point = dropEvent.point;
-        Ext2.Ajax.request({
+        params.source = data.records[0].get('id');
+        params.target = overModel.get('id');
+        params.point = dropPosition;
+        Ext.Ajax.request({
             url: this.controllerUrl + '/json-move',
             mask: this.body,
             params: params,
             success: function(response, options, result) {
-            	this.onMoved(result);
+                this.onMoved(result);
             },
             failure: function(r) {
                 this.tree.getRootNode().reload();
             },
             scope: this
         });
-        dropEvent.dropStatus = true;
-        dropEvent.cancel = true;
+        //dropEvent.dropStatus = true;
+        //dropEvent.cancel = true;
         return true;
     },
 
     onCollapseNode : function(node) {
-    	if (!node.attributes.filter) {
-            Ext2.Ajax.request({
+        debugger;
+        if (!node.attributes.filter) {
+            Ext.Ajax.request({
                 url: this.controllerUrl + '/json-collapse',
-                params: Ext2.apply({id:node.id}, this.getBaseParams())
+                params: Ext.apply({id:node.id}, this.getBaseParams())
             });
-    	}
+        }
     },
 
     onExpandNode : function(node) {
+        debugger;
         if (node.attributes.children && node.attributes.children.length > 0 && !node.attributes.filter) {
-            Ext2.Ajax.request({
+            Ext.Ajax.request({
                 url: this.controllerUrl + '/json-expand',
-                params: Ext2.apply({id:node.id}, this.getBaseParams())
+                params: Ext.apply({id:node.id}, this.getBaseParams())
             });
         }
     },
 
     onVisible : function (o, e) {
-        Ext2.Ajax.request({
+        Ext.Ajax.request({
             url: this.controllerUrl + '/json-visible',
             mask: this.body,
-            params: Ext2.apply({id:this.getSelectedId()}, this.getBaseParams()),
+            params: Ext.apply({id:this.getSelectedId()}, this.getBaseParams()),
             success: function(response, options, result) {
-                node = this.tree.getNodeById(result.id);
-                node.attributes.visible = result.visible;
-                node.ui.iconNode.style.backgroundImage = 'url(' + result.icon + ')';
+                node = this.getTree().getStore().getNodeById(result.id);
+                node.set('visible', result.visible);
+                node.set('icon', result.icon);
             },
             scope: this
         });
@@ -329,15 +354,15 @@ Kwf.Auto.SyncTreePanel = Ext2.extend(Kwf.Binding.AbstractPanel, {
         if (!this.getTree()) return null;
         return this.getTree().getSelectionModel();
     },
-    getSelectedNode : function() {
+    getSelection : function() {
         if (!this.getSelectionModel()) return null;
-        return this.getSelectionModel().getSelectedNode();
+        return this.getSelectionModel().getSelection();
     },
 
     //für AbstractPanel
     getSelectedId: function() {
-        var s = this.getSelectedNode();
-        if (s) return s.id;
+        var s = this.getSelection();
+        if (s && s.length) return s[0].get('id');
         return null;
     },
 
@@ -364,10 +389,10 @@ Kwf.Auto.SyncTreePanel = Ext2.extend(Kwf.Binding.AbstractPanel, {
         if (!response.parent) {
             parent = this.tree.getRootNode();
         } else {
-            parent = this.tree.getNodeById(response.parent);
+            parent = this.getTree().getStore().getNodeById(response.parent);
         }
-        var node = this.tree.getNodeById(response.node);
-        var before = this.tree.getNodeById(response.before);
+        var node = this.getTree().getStore().getNodeById(response.node);
+        var before = this.getTree().getStore().getNodeById(response.before);
         parent.insertBefore(node, before);
         parent.expand();
     },
@@ -382,17 +407,16 @@ Kwf.Auto.SyncTreePanel = Ext2.extend(Kwf.Binding.AbstractPanel, {
     },
 
     setBaseParams : function(baseParams) {
-        Kwf.Auto.SyncTreePanel.superclass.setBaseParams.apply(this, arguments);
+        this.callParent(arguments);
         if (this.editDialog && this.editDialog.setBaseParams) {
             this.editDialog.setBaseParams(baseParams);
         }
     },
     applyBaseParams : function(baseParams) {
-        Kwf.Auto.SyncTreePanel.superclass.applyBaseParams.apply(this, arguments);
+        this.callParent(arguments);
         if (this.editDialog && this.editDialog.applyBaseParams) {
             this.editDialog.applyBaseParams(baseParams);
         }
     }
 
 });
-Ext2.reg('kwf.autotreesync', Kwf.Auto.SyncTreePanel);

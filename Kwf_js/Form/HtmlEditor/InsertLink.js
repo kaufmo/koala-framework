@@ -1,23 +1,28 @@
-Kwf.Form.HtmlEditor.InsertLink = function(config) {
-    Ext2.apply(this, config);
+Ext.define('Kwf.Form.HtmlEditor.InsertLink', {
+    extend: 'Ext.mixin.Observable',
+    requires: [
+        'Kwf.Auto.Form.Window',
+        'Ext.button.Button'
+    ],
+    constructor: function(config) {
+        Ext.apply(this, config);
 
-    var panel = Ext2.ComponentMgr.create(Ext2.applyIf(this.componentConfig, {
-        baseCls: 'x2-plain',
-        formConfig: {
-            tbar: false
-        },
-        autoLoad: false
-    }));
-    this.linkDialog = new Kwf.Auto.Form.Window({
-        autoForm: panel,
-        width: 665,
-        height: 400
-    });
-};
-Ext2.extend(Kwf.Form.HtmlEditor.InsertLink, Ext2.util.Observable, {
+        var panel = Ext.ComponentMgr.create(Ext.applyIf(this.componentConfig, {
+            baseCls: 'x-plain',
+            formConfig: {
+                tbar: false
+            },
+            autoLoad: false
+        }));
+        this.linkDialog = new Kwf.Auto.Form.Window({
+            autoForm: panel,
+            width: 665,
+            height: 400
+        });
+    },
     init: function(cmp){
         this.cmp = cmp;
-        this.cmp.afterMethod('createToolbar', this.afterCreateToolbar, this);
+        this.cmp.on('afterRender', this.afterCreateToolbar, this);
         this.cmp.afterMethod('updateToolbar', this.updateToolbar, this);
     },
 
@@ -25,16 +30,16 @@ Ext2.extend(Kwf.Form.HtmlEditor.InsertLink, Ext2.util.Observable, {
     afterCreateToolbar: function() {
         var tb = this.cmp.getToolbar();
         tb.insert(5, '-');
-        this.action = new Ext2.Action({
+        this.action = new Ext.Button({
             testId: 'createlink',
             handler: this.onInsertLink,
             scope: this,
             tooltip: {
-                cls: 'x2-html-editor-tip',
+                cls: 'x-html-editor-tip',
                 title: trlKwf('Hyperlink'),
                 text: trlKwf('Create new Link for the selected text or edit selected Link.')
             },
-            cls: 'x2-btn-icon x2-edit-createlink',
+            cls: 'x-btn-icon x-edit-createlink',
             clickEvent: 'mousedown',
             tabIndex: -1
         });
@@ -58,7 +63,7 @@ Ext2.extend(Kwf.Form.HtmlEditor.InsertLink, Ext2.util.Observable, {
             }
         }
         this.beforeFocusBookmark = this.cmp.tinymceEditor.selection.getBookmark(1);
-        Ext2.Ajax.request({
+        Ext.Ajax.request({
             params: {componentId: this.cmp.componentId},
             url: this.cmp.controllerUrl+'/json-add-link',
             success: function(response, options, r) {

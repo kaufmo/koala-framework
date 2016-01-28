@@ -1,23 +1,27 @@
-Kwf.Form.HtmlEditor.RemoveLink = Ext2.extend(Ext2.util.Observable, {
+Ext.define('Kwf.Form.HtmlEditor.RemoveLink', {
+    extend: 'Ext.mixin.Observable',
+    requires: [
+        'Ext.button.Button'
+    ],
     init: function(cmp){
         this.cmp = cmp;
-        this.cmp.afterMethod('createToolbar', this.afterCreateToolbar, this);
+        this.cmp.on('afterRender', this.afterCreateToolbar, this);
         this.cmp.afterMethod('updateToolbar', this.updateToolbar, this);
     },
 
     // private
     afterCreateToolbar: function() {
         var tb = this.cmp.getToolbar();
-        this.action = new Ext2.Action({
+        this.action = new Ext.Button({
             handler: this.onRemoveLink,
             icon: '/assets/silkicons/link_break.png',
             scope: this,
             tooltip: {
-                cls: 'x2-html-editor-tip',
+                cls: 'x-html-editor-tip',
                 title: trlKwf('Remove Hyperlink'),
                 text: trlKwf('Remove the selected link.')
             },
-            cls: 'x2-btn-icon',
+            cls: 'x-btn-icon',
             clickEvent: 'mousedown',
             tabIndex: -1
         });

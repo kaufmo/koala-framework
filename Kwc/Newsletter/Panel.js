@@ -7,7 +7,7 @@ Kwc.Newsletter.Panel = Ext2.extend(Kwc.Directories.Item.Directory.Panel,
         this.actions.add.setText(trlKwf('Add new newsletter'));
     },
 
-    onAdd : function()
+    onAddClick : function()
     {
         this.el.mask(trlKwf('Adding...'));
         Ext2.Ajax.request({

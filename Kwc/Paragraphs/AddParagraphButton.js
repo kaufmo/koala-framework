@@ -1,16 +1,25 @@
-Kwc.Paragraphs.AddParagraphButton = Ext2.extend(Ext2.Button, {
+Ext.define('Kwc.Paragraphs.AddParagraphButton', {
+    extend: 'Ext.button.Button',
+    requires: [
+        'Ext.menu.Item',
+        'Ext.menu.Menu'
+    ],
     text : trlKwf('Add Paragraph'),
     icon : '/assets/kwf/images/paragraphAdd.png',
-    cls  : 'x2-btn-text-icon',
+    cls  : 'x-btn-text-icon',
     initComponent: function() {
-        this.addEvents('addParagraph');
-        var buildMenu = function(components, addToItem)
-        {
+        this.menu = new Ext.menu.Menu();
+        Kwc.Paragraphs.AddParagraphButton.buildMenu.call(this, this.components, this.menu);
+
+        this.callParent(arguments);
+    },
+    statics: {
+        buildMenu: function(components, addToItem) {
             if (components.length == 0) { return; }
             for (var i in components) {
                 if (typeof components[i] == 'string') {
-                    addToItem.addItem(
-                        new Ext2.menu.Item({
+                    addToItem.add(
+                        new Ext.menu.Item({
                             component: components[i],
                             text: i,
                             handler: function(menu) {
@@ -21,15 +30,11 @@ Kwc.Paragraphs.AddParagraphButton = Ext2.extend(Ext2.Button, {
                         })
                     );
                 } else {
-                    var item = new Ext2.menu.Item({text: i.replace(/\>\>/, ''), menu: []});
-                    addToItem.addItem(item);
-                    buildMenu.call(this, components[i], addToItem.items.items[addToItem.items.length - 1].menu);
+                    var item = new Ext.menu.Item({text: i.replace(/\>\>/, ''), menu: []});
+                    addToItem.add(item);
+                    Kwc.Paragraphs.AddParagraphButton.buildMenu.call(this, components[i], addToItem.items.items[addToItem.items.length - 1].menu);
                 }
             }
-        };
-        this.menu = new Ext2.menu.Menu();
-        buildMenu.call(this, this.components, this.menu);
-
-        Kwc.Paragraphs.AddParagraphButton.superclass.initComponent.call(this);
+        }
     }
 });

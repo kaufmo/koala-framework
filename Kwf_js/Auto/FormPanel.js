@@ -1,9 +1,34 @@
-Kwf.Auto.FormPanel = Ext2.extend(Kwf.Binding.AbstractPanel, {
+Ext.define('Kwf.Auto.FormPanel', {
+    extend: 'Kwf.Binding.AbstractPanel',
+    alias: 'widget.kwf.autoform',
+    requires: [
+        'Ext.Action',
+        'Ext.window.Window',
+        'Ext.window.MessageBox',
+        'Kwf.Connection',
+        'Ext.form.Panel',
+        'Ext.layout.container.Form',
+        'Ext.form.action.Action',
+        'Ext.tab.Panel',
+        'Kwf.Form.ShowField',
+        'Kwf.Form.StaticField',
+        'Kwf.Form.Checkbox',
+        'Kwf.Form.Hidden',
+        'Kwf.Form.FileCheckBox',
+        'Kwf.Form.ImageViewer',
+        'Kwf.Form.PosField',
+        'Kwf.Form.MultiFields',
+        'Kwf.Form.RadioGroup',
+        'Ext.form.field.Text',
+        'Kwf.Form.MultiCheckbox',
+        'Kwf.Form.FieldSet'
+    ],
     autoScroll: true, //um scrollbars zu bekommen
     border: false,
     maskDisabled: true,
     layout: 'fit',
     timeout: 30000,
+    autoLoad: false,
 
     initComponent: function()
     {
@@ -15,47 +40,44 @@ Kwf.Auto.FormPanel = Ext2.extend(Kwf.Binding.AbstractPanel, {
             delete this.autoLoad;
         }
 
-        this.addEvents(
-            'beforeloadform',
-            'loadform',
-            'deleteaction',
-            'addaction',
-            'renderform'
-        );
-        this.actions.save = new Ext2.Action({
+        this.actions.save = new Ext.Action({
             text    : trlKwf('Save'),
             icon    : '/assets/silkicons/table_save.png',
-            cls     : 'x2-btn-text-icon',
+            cls     : 'x-btn-text-icon',
             handler : this.onSave,
             scope   : this
         });
-        this.actions.saveBack = new Ext2.Action({
+        this.actions.saveBack = new Ext.Action({
             text    : trlKwf('Save and Back'),
             icon    : '/assets/silkicons/table_save.png',
-            cls     : 'x2-btn-text-icon',
+            cls     : 'x-btn-text-icon',
             handler : this.onSaveBack,
             scope   : this,
             hidden  : true //standardmäßig versteckt, ComponentPanel ruft show() auf
         });
-        this.actions['delete'] = new Ext2.Action({
+        this.actions['delete'] = new Ext.Action({
             text    : trlKwf('Delete'),
             icon    : '/assets/silkicons/table_delete.png',
-            cls     : 'x2-btn-text-icon',
+            cls     : 'x-btn-text-icon',
             handler : this.onDelete,
             scope   : this
         });
-        this.actions.add = new Ext2.Action({
+        this.actions.add = new Ext.Action({
             text    : trlKwf('New Entry'),
             icon    : '/assets/silkicons/table_add.png',
-            cls     : 'x2-btn-text-icon',
-            handler : this.onAdd,
+            cls     : 'x-btn-text-icon',
+            handler : this.onAddRecord,
             scope   : this
         });
 
-        Kwf.Auto.FormPanel.superclass.initComponent.call(this);
+        this.callParent(arguments);
+
+        if (this.autoLoad) {
+            this.on('render', this.doAutoLoad, this, {delay:10});
+        }
 
         if (!this.formConfig) this.formConfig = {};
-        Ext2.applyIf(this.formConfig, {
+        Ext.applyIf(this.formConfig, {
             baseParams       : {},
             trackResetOnLoad : true,
             maskDisabled     : false
@@ -78,7 +100,7 @@ Kwf.Auto.FormPanel = Ext2.extend(Kwf.Binding.AbstractPanel, {
 
     onMetaChange : function(meta)
     {
-        Ext2.applyIf(meta.form, this.formConfig);
+        Ext.applyIf(meta.form, this.formConfig);
 
         if (this.baseCls) meta.form.baseCls = this.baseCls; //use the same
 
@@ -99,11 +121,11 @@ Kwf.Auto.FormPanel = Ext2.extend(Kwf.Binding.AbstractPanel, {
             }
             if (meta.helpText) {
                 meta.form.tbar.push('->');
-                meta.form.tbar.push(new Ext2.Action({
+                meta.form.tbar.push(new Ext.Action({
                     icon : '/assets/silkicons/information.png',
-                    cls : 'x2-btn-icon',
+                    cls : 'x-btn-icon',
                     handler : function (a) {
-                        var helpWindow = new Ext2.Window({
+                        var helpWindow = new Ext.Window({
                             html: meta.helpText,
                             width: 400,
                             bodyStyle: 'padding: 10px; background-color: white;',
@@ -122,8 +144,8 @@ Kwf.Auto.FormPanel = Ext2.extend(Kwf.Binding.AbstractPanel, {
             this.remove(this.formPanel, true);
         }
 
-        this.formPanel = new Ext2.FormPanel({
-            baseCls: 'x2-plain',
+        this.formPanel = Ext.create('Ext.form.Panel', {
+            baseCls: 'x-plain',
             autoScroll: true,
             items: meta.form
         });
@@ -132,7 +154,7 @@ Kwf.Auto.FormPanel = Ext2.extend(Kwf.Binding.AbstractPanel, {
             this.fireEvent('loaded', this.getForm());
         }, this);
         this.add(this.formPanel);
-        this.doLayout();
+        this.updateLayout();
         this.setBaseParams(this.baseParams);
     },
 
@@ -156,7 +178,7 @@ Kwf.Auto.FormPanel = Ext2.extend(Kwf.Binding.AbstractPanel, {
         if (!this.getForm()) {
             params.meta = true; //wenn noch keine form vorhanden metaDaten anfordern
         }
-        Ext2.applyIf(params, this.baseParams);
+        Ext.applyIf(params, this.baseParams);
 
         if (this.getForm()) {
             this.getForm().clearValues();
@@ -249,7 +271,7 @@ Kwf.Auto.FormPanel = Ext2.extend(Kwf.Binding.AbstractPanel, {
     submit: function(options)
     {
         if (!this.getForm().isValid()) {
-            Ext2.Msg.alert(trlKwf('Save'),
+            Ext.Msg.alert(trlKwf('Save'),
                 trlKwf("Can't save, please fill all red underlined fields correctly."));
             return;
         }
@@ -269,10 +291,10 @@ Kwf.Auto.FormPanel = Ext2.extend(Kwf.Binding.AbstractPanel, {
         if ((!options.hideMaskText || options.hideMaskText != true) && this.el) this.el.mask(trlKwf('Saving...'));
 
         var params = this.getForm().getValues();
-        params = Ext2.apply(params, this.getBaseParams());
+        params = Ext.apply(params, this.getBaseParams());
         for (var i in params) {
             if (typeof params[i] == 'object') {
-                params[i] = Ext2.encode(params[i]);
+                params[i] = Ext.encode(params[i]);
             } else if (typeof params[i] == 'boolean') {
                 params[i] = params[i] ? '1' : '0';
             }
@@ -281,7 +303,7 @@ Kwf.Auto.FormPanel = Ext2.extend(Kwf.Binding.AbstractPanel, {
         if (!params['id']) {
             params['avoid_reinsert_id'] = Math.random();
         }
-        Ext2.Ajax.request(Ext2.apply(options, {
+        Ext.Ajax.request(Ext.apply(options, {
             params: params,
             timeout: this.timeout,
             url: this.controllerUrl+'/json-save',
@@ -307,8 +329,8 @@ Kwf.Auto.FormPanel = Ext2.extend(Kwf.Binding.AbstractPanel, {
         }));
     },
     onSubmitFailure: function(form, action) {
-        if(action.failureType == Ext2.form.Action.CLIENT_INVALID) {
-            Ext2.Msg.alert(trlKwf('Save'),
+        if(action.failureType == Ext.form.Action.CLIENT_INVALID) {
+            Ext.Msg.alert(trlKwf('Save'),
                 trlKwf("Can't save, please fill all red underlined fields correctly."));
         }
         this.getAction('save').enable();
@@ -333,15 +355,15 @@ Kwf.Auto.FormPanel = Ext2.extend(Kwf.Binding.AbstractPanel, {
         }
     },
     onDelete : function() {
-        Ext2.Msg.show({
+        Ext.Msg.show({
         title:trlKwf('delete?'),
         msg: trlKwf('Do you really want to delete this entry?'),
-        buttons: Ext2.Msg.YESNO,
+        buttons: Ext.Msg.YESNO,
         scope: this,
         fn: function(button) {
             if (button == 'yes') {
 
-                Ext2.Ajax.request({
+                Ext.Ajax.request({
                         url: this.controllerUrl+'/json-delete',
                         params: {id: this.getForm().baseParams.id},
                         success: function(response, options, r) {
@@ -358,7 +380,7 @@ Kwf.Auto.FormPanel = Ext2.extend(Kwf.Binding.AbstractPanel, {
         }
         });
     },
-    onAdd : function(options) {
+    onAddRecord : function(options) {
         var cb = function() {
             if (this.deleteButton) this.deleteButton.disable();
             this.getAction('delete').disable();
@@ -368,14 +390,14 @@ Kwf.Auto.FormPanel = Ext2.extend(Kwf.Binding.AbstractPanel, {
             this.focusFirstField();
             this.fireEvent('addaction', this);
 
-            if (this.ownerCt instanceof Ext2.TabPanel) {
+            if (this.ownerCt instanceof Ext.TabPanel) {
                 //wenn  form in einem tab, die form anzeigen
                 //nach addaction, damit in grid an dem die form gebunden ist die activeId
                 //auf 0 gesetzt werden kann
                 this.ownerCt.setActiveTab(this);
             } else if (this.getFormPanel() && this.getFormPanel().items.first()
                         && this.getFormPanel().items.first().items.first()
-                        && this.getFormPanel().items.first().items.first() instanceof Ext2.TabPanel
+                        && this.getFormPanel().items.first().items.first() instanceof Ext.TabPanel
                         && this.getFormPanel().items.first().items.first().items.first()) {
                 //und das gleiche auch noch wenn IN der form tabs sind
                 //da den ersten tab öffnen
@@ -423,9 +445,9 @@ Kwf.Auto.FormPanel = Ext2.extend(Kwf.Binding.AbstractPanel, {
         this._setFieldBaseParams();
     },
     applyBaseParams : function(baseParams) {
-        Ext2.apply(this.baseParams, baseParams);
+        Ext.apply(this.baseParams, baseParams);
         if (this.getForm()) {
-            Ext2.apply(this.getForm().baseParams, baseParams);
+            Ext.apply(this.getForm().baseParams, baseParams);
         }
         this._setFieldBaseParams();
     },
@@ -436,7 +458,7 @@ Kwf.Auto.FormPanel = Ext2.extend(Kwf.Binding.AbstractPanel, {
     focusFirstField : function() {
         var form = this.getForm();
         if (!form) return;
-        form.items.each(function(i) {
+        form.getFields().each(function(i) {
             if (i.isFormField && !i.disabled) {
                 i.focus();
                 return false;
@@ -448,5 +470,3 @@ Kwf.Auto.FormPanel = Ext2.extend(Kwf.Binding.AbstractPanel, {
         return true;
     }
 });
-
-Ext2.reg('kwf.autoform', Kwf.Auto.FormPanel);

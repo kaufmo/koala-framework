@@ -32,7 +32,7 @@ class Kwf_Controller_Action_Component_ComponentsController extends Kwf_Controlle
             $icon = 'component';            
         }
         $data['expanded'] = $row->class == 'root';
-        $data['bIcon'] = $this->_icons[$icon]->__toString();
+        $data['icon'] = $this->_icons[$icon]->__toString();
         $data['text'] .= ': ' . $row->name;
         return $data;
     }

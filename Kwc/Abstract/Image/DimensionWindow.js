@@ -1,6 +1,17 @@
-Ext2.namespace('Kwc.Abstract.Image');
-Kwc.Abstract.Image.DimensionWindow = Ext2.extend(Ext2.Window, {
-
+Ext.define('Kwc.Abstract.Image.DimensionWindow', {
+    extend: 'Ext.window.Window',
+    alias: 'widget.kwc.image.dimensionwindow',
+    requires: [
+        'Kwf.Form.RadioGroup',
+        'Ext.form.field.Number',
+        'Ext.toolbar.TextItem',
+        'Ext.form.Panel',
+        'Kwc.Abstract.Image.CropImage',
+        'Ext.window.MessageBox'
+    ],
+    uses: [
+        'Kwc.Abstract.Image.DimensionField'
+    ],
     _scaleFactor: null,
     _dpr2Check: false,
 
@@ -36,33 +47,33 @@ Kwc.Abstract.Image.DimensionWindow = Ext2.extend(Ext2.Window, {
             vertical: false,
             items: radios
         });
-        this._widthField = new Ext2.form.NumberField({
+        this._widthField = new Ext.form.NumberField({
             width: 45,
             enableKeyEvents: true,
             validateOnBlur: false,
             validationEvent: false,
             allowNegative: false
         });
-        this._heightField = new Ext2.form.NumberField({
+        this._heightField = new Ext.form.NumberField({
             width: 45,
             enableKeyEvents: true,
             validateOnBlur: false,
             validationEvent: false,
             allowNegative: false
         });
-        this._xField = new Ext2.BoxComponent({
+        this._xField = new Ext.Component({
             autoEl: {
                 html: 'x',
                 style: 'line-height:20px;text-align:center;padding-left:2px;padding-right:2px;'
             }
         });
-        this._pxField = new Ext2.BoxComponent({
+        this._pxField = new Ext.Component({
             autoEl: {
                 html: 'px',
                 style: 'line-height:20px;text-align:center;padding-left:2px;'
             }
         });
-        this._userSelection = new Ext2.Panel({
+        this._userSelection = new Ext.Panel({
             xtype: 'panel',
             layout: 'column',
             cls: 'kwc-abstract-image-dimension-window-userselection',
@@ -98,19 +109,19 @@ Kwc.Abstract.Image.DimensionWindow = Ext2.extend(Ext2.Window, {
         }
         this._enableDisableFields();
 
-        var resolutionField = new Ext2.BoxComponent({
+        var resolutionField = new Ext.Component({
             autoEl: {
                 html: this.imageData.imageWidth+'x'+this.imageData.imageHeight+'px',
                 hideBorders: true
             }
         });
-        var filenameField = new Ext2.BoxComponent({
+        var filenameField = new Ext.Component({
             autoEl: {
                 html: this.imageData.filename+'.'+this.imageData.extension,
                 hideBorders: true
             }
         });
-        var filesizeField = new Ext2.BoxComponent({
+        var filesizeField = new Ext.Component({
             autoEl: {
                 html: Math.round((this.imageData.fileSize/10.24))/100+' KB',
                 hideBorders: true
@@ -129,7 +140,7 @@ Kwc.Abstract.Image.DimensionWindow = Ext2.extend(Ext2.Window, {
             ]
         };
 
-        var showDimensionField = new Ext2.BoxComponent({
+        var showDimensionField = new Ext.Component({
             autoEl: {
                 html: '<div class="only-dimension">'+trlKwf('Dimension')+': '+Kwc.Abstract.Image.DimensionField
                     .getDimensionString(this.dimensions[this._dimensionField.getValue()], this._dpr2Check)+'</div>',
@@ -137,7 +148,7 @@ Kwc.Abstract.Image.DimensionWindow = Ext2.extend(Ext2.Window, {
             }
         });
 
-        this._configPanel = new Ext2.Panel({
+        this._configPanel = new Ext.Panel({
             region: 'west',
             bodyStyle: 'padding: 10px',
             width: 270,
@@ -167,7 +178,7 @@ Kwc.Abstract.Image.DimensionWindow = Ext2.extend(Ext2.Window, {
         var cropPanelItems = new Array();
         if (this._cropImage.isCropDisabled()) {
             // show information for not able to crop
-            var cropDisabledInfo = new Ext2.BoxComponent({
+            var cropDisabledInfo = new Ext.Component({
                 autoEl: {
                     tag: 'div',
                     cls: 'information',
@@ -178,16 +189,16 @@ Kwc.Abstract.Image.DimensionWindow = Ext2.extend(Ext2.Window, {
         }
         cropPanelItems.add(this._cropImage);
 
-        this._errorMessage = new Ext2.Toolbar.TextItem({
+        this._errorMessage = new Ext.Toolbar.TextItem({
             text: '&nbsp;'
         });
-        this._cropPanel = new Ext2.Panel({
+        this._cropPanel = new Ext.Panel({
             tbar: [{
                 text: trlKwf('Reset'),
                 handler: function () {
                     this._cropImage.setCropDataAndPreserveRatio(null, this._getPreserveRatio());
                 },
-                cls:"x2-btn-text-icon",
+                cls:"x-btn-text-icon",
                 hideLabel: true,
                 icon: '/assets/silkicons/arrow_out.png',
                 tooltip: trlKwf('Reset to default (maximum)'),
@@ -204,7 +215,7 @@ Kwc.Abstract.Image.DimensionWindow = Ext2.extend(Ext2.Window, {
             items: cropPanelItems
         });
 
-        this.items = new Ext2.FormPanel({
+        this.items = new Ext.FormPanel({
             border: false,
             bodyStyle: 'padding: 10px',
             layout: 'border',
@@ -227,7 +238,7 @@ Kwc.Abstract.Image.DimensionWindow = Ext2.extend(Ext2.Window, {
                         this.fireEvent('save', this.value);
                         this.close();
                     } else {
-                        Ext2.Msg.alert(trlKwf('Error'), trlKwf('Please fill the marked fields correctly.'));
+                        Ext.Msg.alert(trlKwf('Error'), trlKwf('Please fill the marked fields correctly.'));
                     }
                 },
                 scope: this
@@ -240,7 +251,7 @@ Kwc.Abstract.Image.DimensionWindow = Ext2.extend(Ext2.Window, {
             }
         ];
 
-        Kwc.Abstract.Image.DimensionWindow.superclass.initComponent.call(this);
+        this.callParent(arguments);
         this._validateSizes();
     },
 
@@ -278,17 +289,17 @@ Kwc.Abstract.Image.DimensionWindow = Ext2.extend(Ext2.Window, {
                 cropData: cropData
             };
             var scaleFactor = this._scaleFactor;
-            var errorMessageEl = Ext2.get(this._errorMessage.getEl());
-            errorMessageEl.addClass('kwc-abstract-image-dimensionwindow-errorMessage');
+            var errorMessageEl = Ext.get(this._errorMessage.getEl());
+            errorMessageEl.addCls('kwc-abstract-image-dimensionwindow-errorMessage');
             if (!Kwc.Abstract.Image.DimensionField.isValidImageSize(value, this.dimensions, scaleFactor, this._dpr2Check)) {
-                errorMessageEl.addClass('error');
+                errorMessageEl.addCls('error');
                 errorMessageEl.update(trlKwf('Selection too small!'));
-                this._cropImage.getEl().child('.kwc-abstract-image-crop-image-wrapper').addClass('error');
+                this._cropImage.getEl().down('.kwc-abstract-image-crop-image-wrapper').addCls('error');
             } else {
-                var errorMessageEl = Ext2.get(this._errorMessage.getEl());
-                errorMessageEl.removeClass('error');
+                var errorMessageEl = Ext.get(this._errorMessage.getEl());
+                errorMessageEl.removeCls('error');
                 errorMessageEl.update('');
-                this._cropImage.getEl().child('.kwc-abstract-image-crop-image-wrapper').removeClass('error');
+                this._cropImage.getEl().down('.kwc-abstract-image-crop-image-wrapper').removeCls('error');
             }
         }, this);
 
@@ -437,5 +448,3 @@ Kwc.Abstract.Image.DimensionWindow = Ext2.extend(Ext2.Window, {
         }
     }
 });
-
-Ext2.reg('kwc.image.dimensionwindow', Kwc.Abstract.Image.DimensionWindow);

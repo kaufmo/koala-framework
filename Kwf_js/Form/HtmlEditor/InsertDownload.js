@@ -1,39 +1,44 @@
-Kwf.Form.HtmlEditor.InsertDownload = function(config) {
-    Ext2.apply(this, config);
+Ext.define('Kwf.Form.HtmlEditor.InsertDownload', {
+    extend: 'Ext.mixin.Observable',
+    requires: [
+        'Kwf.Auto.Form.Window',
+        'Ext.button.Button'
+    ],
+    constructor: function(config) {
+        Ext.apply(this, config);
 
-    var panel = Ext2.ComponentMgr.create(Ext2.applyIf(this.componentConfig, {
-        baseCls: 'x2-plain',
-        formConfig: {
-            tbar: false
-        },
-        autoLoad: false
-    }));
-    this.downloadDialog = new Kwf.Auto.Form.Window({
-        autoForm: panel,
-        width: 450,
-        height: 400
-    });
-};
-Ext2.extend(Kwf.Form.HtmlEditor.InsertDownload, Ext2.util.Observable, {
+        var panel = Ext.ComponentMgr.create(Ext.applyIf(this.componentConfig, {
+            baseCls: 'x-plain',
+            formConfig: {
+                tbar: false
+            },
+            autoLoad: false
+        }));
+        this.downloadDialog = new Kwf.Auto.Form.Window({
+            autoForm: panel,
+            width: 450,
+            height: 400
+        });
+    },
     init: function(cmp){
         this.cmp = cmp;
-        this.cmp.afterMethod('createToolbar', this.afterCreateToolbar, this);
+        this.cmp.on('afterRender', this.afterCreateToolbar, this);
         this.cmp.afterMethod('updateToolbar', this.updateToolbar, this);
     },
 
     // private
     afterCreateToolbar: function() {
         var tb = this.cmp.getToolbar();
-        this.action = new Ext2.Action({
+        this.action = new Ext.Button({
             icon: '/assets/silkicons/folder_link.png',
             handler: this.onInsertDownload,
             scope: this,
             tooltip: {
-                cls: 'x2-html-editor-tip',
+                cls: 'x-html-editor-tip',
                 title: trlKwf('Download'),
                 text: trlKwf('Create new Download for the selected text or edit selected Download.')
             },
-            cls: 'x2-btn-icon',
+            cls: 'x-btn-icon',
             clickEvent: 'mousedown',
             tabIndex: -1
         });
@@ -57,7 +62,7 @@ Ext2.extend(Kwf.Form.HtmlEditor.InsertDownload, Ext2.util.Observable, {
             }
         }
         this.beforeFocusBookmark = this.cmp.tinymceEditor.selection.getBookmark(1);
-        Ext2.Ajax.request({
+        Ext.Ajax.request({
             params: {componentId: this.cmp.componentId},
             url: this.cmp.controllerUrl+'/json-add-download',
             success: function(response, options, r) {

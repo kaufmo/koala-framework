@@ -1,8 +1,9 @@
-Ext2.ns('Kwc.Basic.DownloadTag');
-Kwc.Basic.DownloadTag.Panel = Ext2.extend(Ext2.Panel, {
+Ext.define('Kwc.Basic.DownloadTag.Panel', {
+    extend: 'Ext.panel.Panel',
+    alias: 'widget.Kwc.Basic.DownloadTag',
     initComponent: function() {
-        Kwc.Basic.DownloadTag.Panel.superclass.initComponent.call(this);
-        this.findByType('kwf.file')[0].on('uploaded', function(field, value) {
+        this.callParent(arguments);
+        this.query('[xtype=kwf.file]')[0].on('uploaded', function(field, value) {
             if (value) {
                 this.ownerCt.find('autoFillWithFilename', 'filename').forEach(function (f) {
                     var v = value.uploaded_filename || value.filename;
@@ -20,4 +21,3 @@ Kwc.Basic.DownloadTag.Panel = Ext2.extend(Ext2.Panel, {
         }, this);
     }
 });
-Ext2.reg('Kwc.Basic.DownloadTag', Kwc.Basic.DownloadTag.Panel);

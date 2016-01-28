@@ -1,12 +1,12 @@
-Ext2.ns('Kwc.Basic.LinkTag');
-Kwc.Basic.LinkTag.ComboBox = Ext2.extend(Kwc.Abstract.Cards.ComboBox, {
+Ext.define('Kwc.Basic.LinkTag.ComboBox', {
+    extend: 'Kwc.Abstract.Cards.ComboBox',
+    alias: 'widget.kwc.basic.linktag.combobox',
     setValue: function(v) {
-        Kwc.Basic.LinkTag.ComboBox.superclass.setValue.call(this, v);
+        this.callParent(arguments);
         if (v == 'none') {
-            this.el.up('.kwc-basic-linktag-form').child('fieldset.kwc-basic-linktag-seo').dom.style.display = 'none';
+            this.el.up('.kwc-basic-linktag-form').down('fieldset.kwc-basic-linktag-seo').dom.style.display = 'none';
         } else {
-            this.el.up('.kwc-basic-linktag-form').child('fieldset.kwc-basic-linktag-seo').dom.style.display = '';
+            this.el.up('.kwc-basic-linktag-form').down('fieldset.kwc-basic-linktag-seo').dom.style.display = '';
         }
     }
 });
-Ext2.reg('kwc.basic.linktag.combobox', Kwc.Basic.LinkTag.ComboBox);

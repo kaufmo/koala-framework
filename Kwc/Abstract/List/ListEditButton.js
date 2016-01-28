@@ -1,6 +1,8 @@
-Kwc.Abstract.List.ListEditButton = Ext2.extend(Kwf.Auto.GridPanel, {
+Ext.define('Kwc.Abstract.List.ListEditButton', {
+    extend: 'Kwf.Auto.GridPanel',
+    alias: 'widget.kwc.list.listEditButton',
     initComponent: function() {
-        Kwc.Abstract.List.ListEditButton.superclass.initComponent.call(this);
+        this.callParent(arguments);
 
         this.on('cellclick', function(grid, rowIndex, columnIndex, e) {
             var col = grid.getColumnModel().config[columnIndex];
@@ -23,4 +25,3 @@ Kwc.Abstract.List.ListEditButton = Ext2.extend(Kwf.Auto.GridPanel, {
         this.fireEvent('gotComponentConfigs', this.componentConfigs);
     }
 });
-Ext2.reg('kwc.list.listEditButton', Kwc.Abstract.List.ListEditButton);

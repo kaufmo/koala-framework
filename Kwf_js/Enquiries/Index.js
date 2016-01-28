@@ -1,8 +1,9 @@
-
-Ext2.namespace("Kwf.Enquiries");
-
-Kwf.Enquiries.Index = Ext2.extend(Kwf.Auto.GridPanel,
-{
+Ext.define('Kwf.Enquiries.Index', {
+    extend: 'Kwf.Auto.GridPanel',
+    alias: 'widget.kwf.enquiries.index',
+    requires: [
+        'Kwf.Enquiries.ViewPanel'
+    ],
     initComponent: function() {
         // Edit form
         var panel = new Kwf.Enquiries.ViewPanel({
@@ -24,8 +25,6 @@ Kwf.Enquiries.Index = Ext2.extend(Kwf.Auto.GridPanel,
         this.layout = 'border';
         this.items = [ this.grid, panel ];
 
-        Kwf.Enquiries.Index.superclass.initComponent.call(this);
+        this.callParent(arguments);
     }
 });
-
-Ext2.reg('kwf.enquiries.index', Kwf.Enquiries.Index);

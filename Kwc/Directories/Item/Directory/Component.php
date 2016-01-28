@@ -6,7 +6,7 @@ abstract class Kwc_Directories_Item_Directory_Component extends Kwc_Directories_
         $ret = parent::getSettings();
         $ret['assetsAdmin']['dep'][] = 'KwfAutoGrid';
         $ret['assetsAdmin']['dep'][] = 'KwfAutoForm';
-        $ret['assetsAdmin']['dep'][] = 'KwfProxyPanel';
+//        $ret['assetsAdmin']['dep'][] = 'KwfProxyPanel';
         $ret['assetsAdmin']['files'][] = 'kwf/Kwc/Directories/Item/Directory/Panel.js';
         $ret['assetsAdmin']['files'][] = 'kwf/Kwc/Directories/Item/Directory/TabsPanel.js';
         $ret['assetsAdmin']['files'][] = 'kwf/Kwc/Directories/Item/Directory/EditFormPanel.js';

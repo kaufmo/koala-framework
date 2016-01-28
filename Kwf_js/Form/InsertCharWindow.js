@@ -1,12 +1,11 @@
-Kwf.Form.InsertCharWindow = Ext2.extend(Ext2.Window,
-{
+Ext.define('Kwf.Form.InsertCharWindow', {
+    extend: 'Ext.window.Window',
     initComponent: function() {
-        this.addEvents('insertchar');
-        Kwf.Form.InsertCharWindow.superclass.initComponent.call(this);
+        this.callParent(arguments);
     },
 
     onRender : function(ct, position){
-        Kwf.Form.InsertCharWindow.superclass.onRender.call(this, ct, position);
+        this.callParent(arguments);
         this.charmap.each(function(i) {
             if (i[2] == true) {
                 var el = this.body.createChild({

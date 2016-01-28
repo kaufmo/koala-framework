@@ -1,4 +1,9 @@
-Kwf.Component.ComponentPanel = Ext2.extend(Kwf.Binding.AbstractPanel, {
+Ext.define('Kwf.Component.ComponentPanel', {
+    extend: 'Kwf.Binding.AbstractPanel',
+    alias: 'widget.kwf.component',
+    requires: [
+        'Ext.toolbar.Toolbar'
+    ],
     layout: 'card',
     mainComponentClass: 'Kwc_Paragraphs_Component',
     mainType: 'content',
@@ -17,15 +22,15 @@ Kwf.Component.ComponentPanel = Ext2.extend(Kwf.Binding.AbstractPanel, {
         } else {
             delete this.autoLoad;
         }
-        this.contentPanel = new Ext2.Panel();
-        Ext2.apply(this, {
-            tbar        : new Ext2.Toolbar({ height: 25 }),
+        this.contentPanel = new Ext.Panel();
+        Ext.apply(this, {
+            tbar        : new Ext.Toolbar(),
             items       : this.contentPanel,
             currentItem : this.contentPanel
         });
         this.componentsStack = [];
 
-        Kwf.Component.ComponentPanel.superclass.initComponent.call(this);
+        this.callParent(arguments);
     },
     doAutoLoad : function()
     {
@@ -77,7 +82,7 @@ Kwf.Component.ComponentPanel = Ext2.extend(Kwf.Binding.AbstractPanel, {
             item.applyBaseParams(params);
             item.load({}, {focusAfterLoad: true});
             if (item.getAction && item.getAction('saveBack')) {
-                if (this.getTopToolbar().items.getCount() > 2) {
+                if (this.getDockedItems('toolbar[dock="top"]')[0].items.getCount() > 2) {
                     item.getAction('saveBack').show();
                 } else {
                     item.getAction('saveBack').hide();
@@ -91,18 +96,19 @@ Kwf.Component.ComponentPanel = Ext2.extend(Kwf.Binding.AbstractPanel, {
                 baseParams: params,
                 focusAfterAutoLoad: true,
                 autoHeight: this.autoHeight,
+                preventHeader: true,
                 listeners: {
                     scope: this,
                     gotComponentConfigs: function(componentConfigs) {
-                        Ext2.applyIf(this.componentConfigs, componentConfigs);
+                        Ext.applyIf(this.componentConfigs, componentConfigs);
                     },
                     editcomponent: this.loadComponent
                 }
             };
-            Ext2.apply(config, componentConfig);
+            Ext.apply(config, componentConfig);
             if (config.title) delete config.title;
 
-            var item = Ext2.ComponentMgr.create(config);
+            var item = Ext.ComponentMgr.create(config);
             item.on('savebackaction', function() {
                 this.componentsStack.pop();
                 var data = this.componentsStack.pop();
@@ -111,9 +117,9 @@ Kwf.Component.ComponentPanel = Ext2.extend(Kwf.Binding.AbstractPanel, {
             item.on('loaded', function() {
                 //muss hier auch nochmal gemacht werden
                 if (item.getAction && item.getAction('saveBack')) {
-                    var count = this.getTopToolbar().items.getCount();
-                    if (count > 2 && 
-                        this.getTopToolbar().items.items[count-3].xtype == 'splitbutton'
+                    var count = this.getDockedItems('toolbar[dock="top"]')[0].items.getCount();
+                    if (count > 2 &&
+                        this.getDockedItems('toolbar[dock="top"]')[0].items.items[count-3].xtype == 'splitbutton'
                     ) {
                         item.getAction('saveBack').show();
                     } else {
@@ -122,14 +128,14 @@ Kwf.Component.ComponentPanel = Ext2.extend(Kwf.Binding.AbstractPanel, {
                 }
             }, this);
             this.add(item);
-            this.doLayout();
+            this.updateLayout();
         }
         this.getLayout().setActiveItem(item);
     },
 
     updateToolbar: function() {
         this.clearToolbar();
-        var toolbar = this.getTopToolbar();
+        var toolbar = this.getDockedItems('toolbar[dock="top"]')[0];
         for (var i=0; i < this.componentsStack.length; i++) {
             var data = this.componentsStack[i];
             var b = {};
@@ -155,7 +161,7 @@ Kwf.Component.ComponentPanel = Ext2.extend(Kwf.Binding.AbstractPanel, {
                 b.text = this.mainComponentText;
                 b.icon = this.mainComponentIcon;
             }
-            b.cls = 'x2-btn-text-icon';
+            b.cls = 'x-btn-text-icon';
             b.menu = [];
             data.editComponents.each(function(ec) {
                 var cfg = this.componentConfigs[ec.componentClass+'-'+ec.type];
@@ -189,7 +195,7 @@ Kwf.Component.ComponentPanel = Ext2.extend(Kwf.Binding.AbstractPanel, {
         var data = this.componentsStack[this.componentsStack.length-1];
         var cfg = this.componentConfigs[data.componentClass+'-'+data.type];
         toolbar.add({
-            cls: 'x2-btn-text-icon',
+            cls: 'x-btn-text-icon',
             text: cfg.title,
             icon: cfg.icon,
             scope: this,
@@ -200,7 +206,7 @@ Kwf.Component.ComponentPanel = Ext2.extend(Kwf.Binding.AbstractPanel, {
     },
 
     clearToolbar: function() {
-        var toolbar = this.getTopToolbar();
+        var toolbar = this.getDockedItems('toolbar[dock="top"]')[0];
         toolbar.items.each(function(i) {
             toolbar.items.remove(i);
             i.destroy();
@@ -210,7 +216,7 @@ Kwf.Component.ComponentPanel = Ext2.extend(Kwf.Binding.AbstractPanel, {
     load: function(data) {
         this.componentsStack = [];
         if (!data) { data = {}; }
-        Ext2.applyIf(data, {
+        Ext.applyIf(data, {
             componentClass: this.mainComponentClass,
             type: this.mainType,
             text: this.mainComponentText,
@@ -232,7 +238,7 @@ Kwf.Component.ComponentPanel = Ext2.extend(Kwf.Binding.AbstractPanel, {
             baseParams.componentId = String.format(this.mainComponentId, baseParams.id);
             delete baseParams.id;
         }
-        Ext2.apply(this.baseParams, baseParams);
+        Ext.apply(this.baseParams, baseParams);
     },
     hasBaseParams : function(params) {
         var baseParams = this.getBaseParams();
@@ -248,5 +254,3 @@ Kwf.Component.ComponentPanel = Ext2.extend(Kwf.Binding.AbstractPanel, {
         return true;
     }
 });
-
-Ext2.reg('kwf.component', Kwf.Component.ComponentPanel);

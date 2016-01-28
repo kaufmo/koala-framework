@@ -62,11 +62,11 @@
             Kwf.currentViewport = new <?= $this->ext['viewport'] ?>({
                 items: [panel]
             });
-            if((!Kwf.Connection || Kwf.Connection.masks == 0)  && Ext2.get('loading')) {
-                Ext2.get('loading').fadeOut({remove: true});
+            if((!Kwf.Connection || Kwf.Connection.masks == 0)  && Ext.get('loading')) {
+                Ext.get('loading').fadeOut({remove: true});
             }
         };
-        Ext2.onReady(function() {
+        Ext.onReady(function() {
             Kwf.main();
         });
     })();

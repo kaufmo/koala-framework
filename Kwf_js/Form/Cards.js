@@ -1,7 +1,8 @@
-Kwf.Form.Cards = Ext2.extend(Ext2.Panel,
-{
+Ext.define('Kwf.Form.Cards', {
+    extend: 'Ext.panel.Panel',
+    alias: 'widget.kwf.cards',
     afterRender: function() {
-        Kwf.Form.Cards.superclass.afterRender.call(this);
+        this.callParent(arguments);
 
         var combobox = this.items.first();
 
@@ -34,4 +35,3 @@ Kwf.Form.Cards = Ext2.extend(Ext2.Panel,
     }
 
 });
-Ext2.reg('kwf.cards', Kwf.Form.Cards);

@@ -39,7 +39,7 @@ Kwc.Mail.Editable.Panel = Ext2.extend(Ext2.Panel, {
                     autoLoad: false
                 });
                 settings.add(i);
-                settings.doLayout();
+                settings.updateLayout();
             }
             settings.getLayout().setActiveItem(i);
             i.setBaseParams({

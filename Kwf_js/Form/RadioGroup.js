@@ -1,10 +1,10 @@
-Kwf.Form.RadioGroup = Ext2.extend(Ext2.form.RadioGroup, {
+Ext.define('Kwf.Form.RadioGroup', {
+    extend: 'Ext.form.RadioGroup',
     initComponent: function() {
-        this.addEvents('changevalue');
-        Kwf.Form.RadioGroup.superclass.initComponent.call(this);
+        this.callParent(arguments);
     },
     afterRender: function() {
-        Kwf.Form.RadioGroup.superclass.afterRender.call(this);
+        this.callParent(arguments);
         if (this.value) {
             this.setValue(this.value);
         }
@@ -52,4 +52,3 @@ Kwf.Form.RadioGroup = Ext2.extend(Ext2.form.RadioGroup, {
         this.fireEvent('changevalue', v);
     }
 });
-Ext2.reg('radiogroup', Kwf.Form.RadioGroup);

@@ -1,6 +1,11 @@
-Kwf.Form.PageSelect = Ext2.extend(Kwf.Form.AbstractSelect, {
+Ext.define('Kwf.Form.PageSelect', {
+    extend: 'Kwf.Form.AbstractSelect',
+    alias: 'widget.pageselect',
+    requires: [
+        'Kwf.Auto.TreePanel'
+    ],
     initComponent: function() {
-        Kwf.Form.PageSelect.superclass.initComponent.call(this);
+        this.callParent(arguments);
     },
     _getWindowItem: function()
     {
@@ -35,5 +40,3 @@ Kwf.Form.PageSelect = Ext2.extend(Kwf.Form.AbstractSelect, {
         }
     }
 });
-
-Ext2.reg('pageselect', Kwf.Form.PageSelect);

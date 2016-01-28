@@ -1,4 +1,5 @@
-Kwf.About = Ext2.extend(Ext2.Window, {
+Ext.define('Kwf.About', {
+    extend: 'Ext.window.Window',
     initComponent: function() {
         this.title = 'About';
         this.width = 350;
@@ -6,10 +7,10 @@ Kwf.About = Ext2.extend(Ext2.Window, {
         this.resizable = false;
         this.layout = 'fit';
         this.modal = true;
-        this.items = [new Ext2.Panel({
+        this.items = [new Ext.panel.Panel({
             cls: 'kwf-about',
             autoLoad: '/kwf/user/about/content'
         })];
-        Kwf.About.superclass.initComponent.call(this);
+        this.callParent(arguments);
     }
 });

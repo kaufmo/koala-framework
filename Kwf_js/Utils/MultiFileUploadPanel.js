@@ -1,6 +1,13 @@
-Ext2.namespace('Kwf.Utils');
-Kwf.Utils.MultiFileUploadPanel = Ext2.extend(Ext2.Panel,
-{
+Ext.define('Kwf.Utils.MultiFileUploadPanel', {
+    extend: 'Ext.panel.Panel',
+    requires: [
+        'Kwf.Utils.SwfUpload',
+        'Ext.window.MessageBox',
+        'Ext.button.Button'
+    ],
+    uses: [
+        'Kwf.Utils.Upload'
+    ],
     fileSizeLimit: null,
     allowOnlyImages: false,
     maxResolution: 0,
@@ -13,10 +20,10 @@ Kwf.Utils.MultiFileUploadPanel = Ext2.extend(Ext2.Panel,
     
     initComponent: function() {
         if (!this.baseParams) this.baseParams = {};
-        Kwf.Utils.MultiFileUploadPanel.superclass.initComponent.call(this);
+        this.callParent(arguments);
     },
     afterRender: function() {
-        Kwf.Utils.MultiFileUploadPanel.superclass.afterRender.call(this);
+        this.callParent(arguments);
 
         var container = this.body.createChild();
 
@@ -43,7 +50,7 @@ Kwf.Utils.MultiFileUploadPanel = Ext2.extend(Ext2.Panel,
                     if (this.progress) this.progress.hide();
                     if (this._maxEntriesAlertVisible) return;
                     this._maxEntriesAlertVisible = true;
-                    Ext2.Msg.alert(trlKwf('Error'), this.maxEntriesErrorMessage, function() {
+                    Ext.Msg.alert(trlKwf('Error'), this.maxEntriesErrorMessage, function() {
                         this._maxEntriesAlertVisible = false;
                     }, this);
                     return;
@@ -56,14 +63,13 @@ Kwf.Utils.MultiFileUploadPanel = Ext2.extend(Ext2.Panel,
                 this.uploadedIds = [];
                 this.running = true;
                 this.startFileIndex = this.numFiles-1;
-                this.progress = Ext2.MessageBox.show({
+                this.progress = Ext.MessageBox.show({
                     title : trlKwf('Upload'),
                     msg : trlKwf('Uploading files'),
-                    buttons: false,
                     progress:true,
                     closable:false,
                     minWidth: 250,
-                    buttons: Ext2.MessageBox.CANCEL,
+                    buttons: Ext.MessageBox.CANCEL,
                     scope: this,
                     fn: function(button) {
                         for(var i=this.startFileIndex;i<this.numFiles;i++) {
@@ -101,8 +107,8 @@ Kwf.Utils.MultiFileUploadPanel = Ext2.extend(Ext2.Panel,
                 this.running = false;
                 this.progress.updateProgress(0.9);
 
-                var params = Ext2.apply(this.baseParams, { uploadIds: this.uploadedIds.join(',')});
-                Ext2.Ajax.request({
+                var params = Ext.apply(this.baseParams, { uploadIds: this.uploadedIds.join(',')});
+                Ext.Ajax.request({
                     url: this.controllerUrl+'/json-multi-upload',
                     params: params,
                     success: function() {
@@ -120,9 +126,9 @@ Kwf.Utils.MultiFileUploadPanel = Ext2.extend(Ext2.Panel,
             }, this);
         } else {
             container.setStyle('position', 'relative');
-            this.uploadButton = new Ext2.Button({
+            this.uploadButton = new Ext.Button({
                 text: trlKwf('Upload Files'),
-                cls: 'x2-btn-text-icon',
+                cls: 'x-btn-text-icon',
                 icon: '/assets/silkicons/add.png',
                 renderTo: container
             });
@@ -166,18 +172,17 @@ Kwf.Utils.MultiFileUploadPanel = Ext2.extend(Ext2.Panel,
         if (!files.length) return;
 
         if (this.maxNumberOfFiles!==null && files.length > this.maxNumberOfFiles) {
-            Ext2.Msg.alert(trlKwf('Error'), this.maxEntriesErrorMessage);
+            Ext.Msg.alert(trlKwf('Error'), this.maxEntriesErrorMessage);
             return;
         }
 
-        this.progress = Ext2.MessageBox.show({
+        this.progress = Ext.MessageBox.show({
             title : trlKwf('Upload'),
             msg : trlKwf('Uploading files'),
-            buttons: false,
             progress:true,
             closable:false,
             minWidth: 250,
-            buttons: Ext2.MessageBox.CANCEL,
+            buttons: Ext.MessageBox.CANCEL,
             scope: this,
             fn: function(button) {
                 this.fileQueue = [];
@@ -223,8 +228,8 @@ Kwf.Utils.MultiFileUploadPanel = Ext2.extend(Ext2.Panel,
                     this.updateProgress();
                     this.html5UploadFile(); //neext
                 } else {
-                    var params = Ext2.apply(this.baseParams, { uploadIds: this.uploadedIds.join(',')});
-                    Ext2.Ajax.request({
+                    var params = Ext.apply(this.baseParams, { uploadIds: this.uploadedIds.join(',')});
+                    Ext.Ajax.request({
                         url: this.controllerUrl+'/json-multi-upload',
                         params: params,
                         success: function() {
@@ -250,7 +255,7 @@ Kwf.Utils.MultiFileUploadPanel = Ext2.extend(Ext2.Panel,
 
     applyBaseParams: function(baseParams)
     {
-        Ext2.apply(this.baseParams, baseParams);
+        Ext.apply(this.baseParams, baseParams);
     },
     setBaseParams: function(baseParams)
     {

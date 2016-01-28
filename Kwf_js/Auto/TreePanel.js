@@ -1,11 +1,12 @@
-Kwf.Auto.TreePanel = Ext2.extend(Kwf.Auto.SyncTreePanel, {
-
+Ext.define('Kwf.Auto.TreePanel', {
+    extend: 'Kwf.Auto.SyncTreePanel',
+    alias: 'widget.kwf.autotree',
     onSaved : function (response)
     {
-        node = this.tree.getNodeById(response.id);
+        node = this.getTree().getStore().getNodeById(response.id);
         if (node == undefined) {
             if (response.data.parent_id == null) { response.data.parent_id = 0; }
-            parentNode = this.tree.getNodeById(response.data.parent_id);
+            parentNode = this.getTree().getStore().getNodeById(response.data.parent_id);
             if (parentNode.isExpanded()) {
                 response.uiProvider = eval(response.uiProvider);
                 node = new Ext2.tree.AsyncTreeNode(response);
@@ -15,7 +16,7 @@ Kwf.Auto.TreePanel = Ext2.extend(Kwf.Auto.SyncTreePanel, {
                     parentNode.appendChild(node);
                 }
                 parentNode.expand();
-                this.tree.getSelectionModel().select(this.tree.getNodeById(response.id));
+                this.tree.getSelectionModel().select(this.getTree().getStore().getNodeById(response.id));
             } else {
                 parentNode.expand();
             }
@@ -27,7 +28,7 @@ Kwf.Auto.TreePanel = Ext2.extend(Kwf.Auto.SyncTreePanel, {
     },
 
     onDeleted: function (response) {
-        node = this.tree.getNodeById(response.id);
+        node = this.getTree().getStore().getNodeById(response.id);
         if (node.nextSibling) {
             sibling = node.nextSibling;
         } else if (node.previousSibling) {
@@ -40,5 +41,3 @@ Kwf.Auto.TreePanel = Ext2.extend(Kwf.Auto.SyncTreePanel, {
     }
 
 });
-
-Ext2.reg('kwf.autotree', Kwf.Auto.TreePanel);

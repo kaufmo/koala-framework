@@ -1,4 +1,9 @@
-Kwf.Form.FieldSet = Ext2.extend(Ext2.form.FieldSet, {
+Ext.define('Kwf.Form.FieldSet', {
+    extend: 'Ext.form.FieldSet',
+    requires: [
+        'Kwf.Form.Hidden',
+        'Ext.window.Window'
+    ],
     checkboxToggle: false,
     checkboxCollapse: true,
     initComponent: function() {
@@ -37,7 +42,7 @@ Kwf.Form.FieldSet = Ext2.extend(Ext2.form.FieldSet, {
             this.add(this.hiddenCheckboxValue);
             delete this.checkboxName;
         }
-        Kwf.Form.FieldSet.superclass.initComponent.call(this);
+        this.callParent(arguments);
     },
     onCheckClick : function() {
         this.hiddenCheckboxValue.setValue(this.checkbox.dom.checked ? '1' : '0');
@@ -50,12 +55,12 @@ Kwf.Form.FieldSet = Ext2.extend(Ext2.form.FieldSet, {
             }, this);
             this.enable();
         } else {
-            Kwf.Form.FieldSet.superclass.enableRecursive.call(this);
+            this.callParent(arguments);
         }
     },
 
     afterRender: function() {
-        Kwf.Form.FieldSet.superclass.afterRender.call(this);
+        this.callParent(arguments);
         if (this.helpText) {
             this.helpEl = this.getEl().createChild({
                 tag: 'a',
@@ -65,7 +70,7 @@ Kwf.Form.FieldSet = Ext2.extend(Ext2.form.FieldSet, {
             }, this.getEl().down('legend'));
             this.helpEl.on('click', function(e) {
                 e.stopEvent();
-                var helpWindow = new Ext2.Window({
+                var helpWindow = new Ext.window.Window({
                     html: this.helpText,
                     width: 400,
                     bodyStyle: 'padding: 10px; background-color: white;',
@@ -87,5 +92,3 @@ Kwf.Form.FieldSet = Ext2.extend(Ext2.form.FieldSet, {
         }
     }
 });
-
-Ext2.reg('fieldset', Kwf.Form.FieldSet);

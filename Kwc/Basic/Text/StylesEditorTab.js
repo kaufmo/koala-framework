@@ -1,5 +1,9 @@
-Kwc.Basic.Text.StylesEditorTab = Ext2.extend(Ext2.Panel,
-{
+Ext.define('Kwc.Basic.Text.StylesEditorTab', {
+    extend: 'Ext.panel.Panel',
+    requires: [
+        'Kwf.Auto.FormPanel',
+        'Kwf.Auto.GridPanel'
+    ],
     layout: 'border',
     initComponent: function()
     {
@@ -17,7 +21,7 @@ Kwc.Basic.Text.StylesEditorTab = Ext2.extend(Ext2.Panel,
             bindings: [this.form]
         });
         this.items = [this.form, this.grid];
-        Kwc.Basic.Text.StylesEditorTab.superclass.initComponent.call(this);
+        this.callParent(arguments);
     },
     applyBaseParams: function(params) {
         this.form.applyBaseParams(params);

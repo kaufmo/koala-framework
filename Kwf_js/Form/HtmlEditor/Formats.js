@@ -1,8 +1,13 @@
-Kwf.Form.HtmlEditor.Formats = Ext2.extend(Ext2.util.Observable, {
+Ext.define('Kwf.Form.HtmlEditor.Formats', {
+    extend: 'Ext.mixin.Observable',
+    requires: [
+        'Ext.button.Button'
+    ],
     init: function(cmp){
         this.cmp = cmp;
+        console.log('init');
         this.cmp.on('initialize', this.onInit, this, {delay: 1, single: true});
-        this.cmp.afterMethod('createToolbar', this.afterCreateToolbar, this);
+        this.cmp.on('afterRender', this.afterCreateToolbar, this);
         this.cmp.afterMethod('updateToolbar', this.updateToolbar, this);
     },
 
@@ -17,31 +22,32 @@ Kwf.Form.HtmlEditor.Formats = Ext2.extend(Ext2.util.Observable, {
 
     // private
     afterCreateToolbar: function() {
+        console.log('afterCreateToolbar');
         var tb = this.cmp.getToolbar();
-        this.boldAction = new Ext2.Button({
+        this.boldAction = new Ext.Button({
             handler: this.onBold,
             scope: this,
             tooltip: {
                 title: trlKwf('Bold (Ctrl+B)'),
                 text: trlKwf('Make the selected text bold.'),
-                cls: 'x2-html-editor-tip'
+                cls: 'x-html-editor-tip'
             },
-            cls : 'x2-btn-icon x2-edit-bold',
+            cls : 'x-btn-icon x-edit-bold',
             clickEvent: 'mousedown',
             tabIndex: -1,
             enableToggle: true
         });
         tb.insert(0, this.boldAction);
 
-        this.italicAction = new Ext2.Button({
+        this.italicAction = new Ext.Button({
             handler: this.onItalic,
             scope: this,
             tooltip: {
                 title: trlKwf('Italic (Ctrl+I)'),
                 text: trlKwf('Make the selected text italic.'),
-                cls: 'x2-html-editor-tip'
+                cls: 'x-html-editor-tip'
             },
-            cls : 'x2-btn-icon x2-edit-italic',
+            cls : 'x-btn-icon x-edit-italic',
             clickEvent: 'mousedown',
             tabIndex: -1,
             enableToggle: true

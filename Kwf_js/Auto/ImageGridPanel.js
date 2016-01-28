@@ -1,5 +1,24 @@
-Kwf.Auto.ImageGridPanel = Ext2.extend(Kwf.Binding.AbstractPanel,
-{
+Ext.define('Kwf.Auto.ImageGridPanel', {
+    extend: 'Kwf.Binding.AbstractPanel',
+    alias: 'widget.kwf.imagegrid',
+    requires: [
+        'Ext.Action',
+        'Ext.data.proxy.Ajax',
+        'Ext.data.reader.Json',
+        'Ext.data.Store',
+        'Ext.data.Model',
+        'Ext.toolbar.Paging',
+        'Kwf.PagingToolbar.Date',
+        'Kwf.Auto.FilterCollection',
+        'Ext.window.Window',
+        'Ext.view.View',
+        'Ext.tip.QuickTipManager',
+        'Kwf.Connection',
+        'Ext.window.MessageBox'
+    ],
+    uses: [
+        'Kwf.Auto.FormPanel'
+    ],
     layout: 'fit',
 
     initComponent : function()
@@ -12,7 +31,7 @@ Kwf.Auto.ImageGridPanel = Ext2.extend(Kwf.Binding.AbstractPanel,
         }
 
         if (!this.tpl) {
-            this.tpl = new Ext2.XTemplate(
+            this.tpl = new Ext.XTemplate(
                 '<tpl for=".">',
                     '<div class="thumb-wrap">',
                         '<table class="thumb" cellpadding="0" cellspacing="3" border="0"><tr><td>',
@@ -21,12 +40,12 @@ Kwf.Auto.ImageGridPanel = Ext2.extend(Kwf.Binding.AbstractPanel,
                         '<div class="label">{label_short}</div>',
                     '</div>',
                 '</tpl>',
-                '<div class="x2-clear"></div>'
+                '<div class="x-clear"></div>'
             );
         }
 
         if (!this.bigPreviewTpl) {
-            this.bigPreviewTpl = new Ext2.XTemplate(
+            this.bigPreviewTpl = new Ext.XTemplate(
                 '<div class="big-wrap">',
                     '<div class="label">{label}</div>',
                     '<div class="imageBig"><img src="{src_large}" alt="{label}" width="{src_large_width}" height="{src_large_height}" /></div>',
@@ -40,29 +59,29 @@ Kwf.Auto.ImageGridPanel = Ext2.extend(Kwf.Binding.AbstractPanel,
             };
         }
 
-        this.actions.reload = new Ext2.Action({
+        this.actions.reload = new Ext.Action({
             icon    : '/assets/silkicons/arrow_rotate_clockwise.png',
-            cls     : 'x2-btn-icon',
+            cls     : 'x-btn-icon',
             tooltip : trlKwf('Reload'),
             handler : this.reload,
             scope   : this
         });
-        this.actions.add = new Ext2.Action({
+        this.actions.add = new Ext.Action({
             text    : trlKwf('Add'),
             icon    : '/assets/silkicons/table_add.png',
-            cls     : 'x2-btn-text-icon',
-            handler : this.onAdd,
+            cls     : 'x-btn-text-icon',
+            handler : this.onAddRecord,
             scope: this
         });
-        this.actions['delete'] = new Ext2.Action({
+        this.actions['delete'] = new Ext.Action({
             text    : trlKwf('Delete'),
             icon    : '/assets/silkicons/table_delete.png',
-            cls     : 'x2-btn-text-icon',
+            cls     : 'x-btn-text-icon',
             handler : this.onDelete,
             scope: this,
             needsSelection: true
         });
-        Kwf.Auto.ImageGridPanel.superclass.initComponent.call(this);
+        this.callParent(arguments);
     },
 
     doAutoLoad : function()
@@ -80,19 +99,23 @@ Kwf.Auto.ImageGridPanel = Ext2.extend(Kwf.Binding.AbstractPanel,
             if (meta.paging) remoteSort = true;
             if (!meta.sortable) remoteSort = true;
             var storeConfig = {
-                proxy: new Ext2.data.HttpProxy({ url: this.controllerUrl + '/json-data' }),
-                reader: new Ext2.data.JsonReader({
-                    totalProperty: meta.totalProperty,
-                    root: meta.root,
-                    id: meta.id,
-                    sucessProperty: meta.successProperty,
-                    fields: meta.fields
-                }),
+                proxy: {
+                    type: 'ajax',
+                    url: this.controllerUrl + '/json-data',
+                    reader: {
+                        type: 'json',
+                        totalProperty: meta.totalProperty,
+                        rootProperty: meta.root,
+                        id: meta.id,
+                        successProperty: meta.successProperty,
+                        fields: meta.fields
+                    }
+                },
                 remoteSort: remoteSort,
                 sortInfo: meta.sortInfo,
                 pruneModifiedRecords: true
             };
-            this.store = new Ext2.data.Store(storeConfig);
+            this.store = new Ext.data.Store(storeConfig);
             if (this.baseParams) {
                 this.setBaseParams(this.baseParams);
                 delete this.baseParams;
@@ -112,7 +135,7 @@ Kwf.Auto.ImageGridPanel = Ext2.extend(Kwf.Binding.AbstractPanel,
 
         this.store.newRecords = []; //hier werden neue records gespeichert die nicht dirty sind
         this.store.on('update', function(store, record, operation) {
-            if (operation == Ext2.data.Record.EDIT) {
+            if (operation == Ext.data.Record.EDIT) {
                 if (this.isDirty()) {
                     this.getAction('save').enable();
                 } else {
@@ -141,7 +164,7 @@ Kwf.Auto.ImageGridPanel = Ext2.extend(Kwf.Binding.AbstractPanel,
 
         this.relayEvents(this.store, ['load']);
 
-        var viewConfig = Ext2.applyIf(this.viewConfig, {
+        var viewConfig = Ext.applyIf(this.viewConfig, {
             store: this.store,
             tpl: this.tpl,
             cls: 'imageGrid',
@@ -169,16 +192,16 @@ Kwf.Auto.ImageGridPanel = Ext2.extend(Kwf.Binding.AbstractPanel,
                     }
                     this.pagingType = meta.paging.type;
                 } else {
-                    this.pagingType = 'Ext2.PagingToolbar';
-                    t = Ext2.PagingToolbar;
+                    this.pagingType = 'Ext.PagingToolbar';
+                    t = Ext.PagingToolbar;
                 }
                 delete meta.paging.type;
                 var pagingConfig = meta.paging;
                 pagingConfig.store = this.store;
                 this.bottomToolBar = new t(pagingConfig);
             } else {
-                this.pagingType = 'Ext2.PagingToolbar';
-                this.bottomToolBar = new Ext2.PagingToolbar({
+                this.pagingType = 'Ext.PagingToolbar';
+                this.bottomToolBar = new Ext.PagingToolbar({
                     store: this.store,
                     pageSize: meta.paging,
                     displayInfo: true
@@ -202,7 +225,7 @@ Kwf.Auto.ImageGridPanel = Ext2.extend(Kwf.Binding.AbstractPanel,
         var existingActions = {};
         for (var i = 0; i < this.topToolBar.length; i++) {
             if (typeof this.topToolBar[i] == 'string'
-                    && this.getAction(this.topToolBar[i])) {
+                && this.getAction(this.topToolBar[i])) {
                 existingActions[this.topToolBar[i]] = true;
             }
         }
@@ -232,7 +255,7 @@ Kwf.Auto.ImageGridPanel = Ext2.extend(Kwf.Binding.AbstractPanel,
 
         for (var i = 0; i < this.topToolBar.length; i++) {
             if (typeof this.topToolBar[i] == 'string'
-                    && this.getAction(this.topToolBar[i])) {
+                && this.getAction(this.topToolBar[i])) {
                 this.topToolBar[i] = this.getAction(this.topToolBar[i]);
             }
         }
@@ -255,11 +278,11 @@ Kwf.Auto.ImageGridPanel = Ext2.extend(Kwf.Binding.AbstractPanel,
 
         if (meta.helpText) {
             this.topToolBar.add('->');
-            this.topToolBar.add(new Ext2.Action({
+            this.topToolBar.add(new Ext.Action({
                 icon : '/assets/silkicons/information.png',
-                cls : 'x2-btn-icon',
+                cls : 'x-btn-icon',
                 handler : function (a) {
-                    var helpWindow = new Ext2.Window({
+                    var helpWindow = new Ext.Window({
                         html: meta.helpText,
                         width: 400,
                         bodyStyle: 'padding: 10px; background-color: white;',
@@ -278,7 +301,7 @@ Kwf.Auto.ImageGridPanel = Ext2.extend(Kwf.Binding.AbstractPanel,
             delete this.topToolBar;
         }
 
-        this.view = new Ext2.DataView(viewConfig);
+        this.view = new Ext.DataView(viewConfig);
         this.relayEvents(this.view, ['selectionchange', 'beforeselect']);
 
         this.store.on('beforeload', function() {
@@ -287,15 +310,15 @@ Kwf.Auto.ImageGridPanel = Ext2.extend(Kwf.Binding.AbstractPanel,
         this.store.on('load', function(store, records, opts) {
             this.el.unmask();
 
-            Ext2.apply(Ext2.QuickTips.getQuickTip(), {
+            Ext.apply(Ext.QuickTips.getQuickTip(), {
                 maxWidth: 420,
                 minWidth: 100
             });
 
             var compiledTpl = this.bigPreviewTpl.compile();
             for (var i = 0; i < records.length; i++) {
-                Ext2.QuickTips.register({
-                    target: Ext2.get(this.view.getNode(i)).child('img'),
+                Ext.QuickTips.register({
+                    target: Ext.get(this.view.getNode(i)).child('img'),
                     text: compiledTpl.apply(records[i].data),
                     dismissDelay: 40000
                 });
@@ -316,7 +339,7 @@ Kwf.Auto.ImageGridPanel = Ext2.extend(Kwf.Binding.AbstractPanel,
             }
         }, this);
 
-        var panel = new Ext2.Panel({
+        var panel = new Ext.Panel({
             tbar: this.topToolBar ? this.topToolBar : null,
             bbar: this.bottomToolBar ? this.bottomToolBar : null,
             items: [ this.view],
@@ -324,12 +347,12 @@ Kwf.Auto.ImageGridPanel = Ext2.extend(Kwf.Binding.AbstractPanel,
             autoScroll: true
         });
         this.add(panel);
-        this.doLayout();
+        this.updateLayout();
 
         this.fireEvent('loaded', this.view);
 
         if (result.rows) {
-            this.store.loadData(result);
+            this.store.loadData(result.rows);
         }
     },
 
@@ -386,7 +409,7 @@ Kwf.Auto.ImageGridPanel = Ext2.extend(Kwf.Binding.AbstractPanel,
         }
         if (!params) params = {};
         if (!this.getStore()) {
-            Ext2.applyIf(params, Ext2.apply({ meta: true }, this.baseParams));
+            Ext.applyIf(params, Ext.apply({ meta: true }, this.baseParams));
             if (!this.metaConn) this.metaConn = new Kwf.Connection({ autoAbort: true });
             this.metaConn.request({
                 mask: true,
@@ -403,10 +426,6 @@ Kwf.Auto.ImageGridPanel = Ext2.extend(Kwf.Binding.AbstractPanel,
             }
             this.getStore().load({ params: params });
         }
-    },
-
-    getStore : function() {
-        return this.store;
     },
     getBaseParams : function() {
         if (this.getStore()) {
@@ -425,11 +444,11 @@ Kwf.Auto.ImageGridPanel = Ext2.extend(Kwf.Binding.AbstractPanel,
     },
     applyBaseParams : function(baseParams) {
         if (this.getStore()) {
-            Ext2.apply(this.getStore().baseParams, baseParams);
+            Ext.apply(this.getStore().baseParams, baseParams);
         } else {
             //no store yet, apply them later
             if (!this.baseParams) this.baseParams = {};
-            Ext2.apply(this.baseParams, baseParams);
+            Ext.apply(this.baseParams, baseParams);
         }
     },
     resetFilters: function() {
@@ -447,12 +466,12 @@ Kwf.Auto.ImageGridPanel = Ext2.extend(Kwf.Binding.AbstractPanel,
         }
     },
 
-    onAdd : function()
+    onAddRecord : function()
     {
         //im ersten form-binding hinzufügen
         this.bindings.each(function(b) {
             if (b.item instanceof Kwf.Auto.FormPanel) {
-                b.item.onAdd();
+                b.item.onAddRecord();
                 return false;
             }
         }, this);
@@ -460,10 +479,10 @@ Kwf.Auto.ImageGridPanel = Ext2.extend(Kwf.Binding.AbstractPanel,
     },
 
     onDelete : function() {
-        Ext2.Msg.show({
+        Ext.Msg.show({
             title: trlKwf('Delete'),
             msg: trlKwf('Do you really wish to remove this entry / these entries?'),
-            buttons: Ext2.Msg.YESNO,
+            buttons: Ext.Msg.YESNO,
             scope: this,
             fn: function(button) {
                 if (button == 'yes') {
@@ -477,7 +496,7 @@ Kwf.Auto.ImageGridPanel = Ext2.extend(Kwf.Binding.AbstractPanel,
                     params[this.store.reader.meta.id] = ids.join(';');
 
                     this.el.mask(trlKwf('Deleting...'));
-                    Ext2.Ajax.request({
+                    Ext.Ajax.request({
                         url: this.controllerUrl+'/json-delete',
                         params: params,
                         success: function(response, options, r) {
@@ -501,5 +520,3 @@ Kwf.Auto.ImageGridPanel = Ext2.extend(Kwf.Binding.AbstractPanel,
         });
     }
 });
-
-Ext2.reg('kwf.imagegrid', Kwf.Auto.ImageGridPanel);

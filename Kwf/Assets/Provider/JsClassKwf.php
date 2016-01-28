@@ -3,10 +3,16 @@ class Kwf_Assets_Provider_JsClassKwf extends Kwf_Assets_Provider_Abstract
 {
     public function getDependency($dependencyName)
     {
-        if (substr($dependencyName, 0, 4) != 'Kwf.') {
+        if (!in_array(substr($dependencyName, 0, 4), array('Kwf.', 'Kwc.'))) {
             return null;
         }
-        $d = '/Kwf_js/'.str_replace('.', '/', substr($dependencyName, 4)).'.js';
+
+        if (substr($dependencyName, 0, 4) == 'Kwf.') {
+            $d = '/Kwf_js/'.str_replace('.', '/', substr($dependencyName, 4)).'.js';
+        } else if (substr($dependencyName, 0, 4) == 'Kwc.') {
+            $d = '/Kwc/'.str_replace('.', '/', substr($dependencyName, 4)).'.js';
+        }
+
         if (file_exists(KWF_PATH.$d)) {
             return Kwf_Assets_Dependency_File::createDependency('kwf'.$d, $this->_providerList);
         }

@@ -1,16 +1,14 @@
-Kwf.Utils.SwfUpload = function(config) {
-    Ext2.apply(this, config);
-    this.addEvents(
-        'fileQueued',
-        'uploadProgress',
-        'uploadSuccess',
-        'uploadError',
-        'flashLoadError'
-    );
-    Kwf.Utils.SwfUpload.superclass.constructor.call(this);
-    this.initSwf();
-};
-Ext2.extend(Kwf.Utils.SwfUpload, Ext2.util.Observable, {
+Ext.define('Kwf.Utils.SwfUpload', {
+    extend: 'Ext.mixin.Observable',
+    requires: [
+        'Kwf.User.Login.Dialog',
+        'Ext.window.MessageBox'
+    ],
+    constructor: function(config) {
+        Ext.apply(this, config);
+        this.callParent(arguments);
+        this.initSwf();
+    },
     //buttonPlaceholderId,
     //fileSizeLimit,
     //postParams,
@@ -83,7 +81,7 @@ Ext2.extend(Kwf.Utils.SwfUpload, Ext2.util.Observable, {
             },
             upload_success_handler: function(file, response) {
                 try {
-                    var r = Ext2.util.JSON.decode(response);
+                    var r = Ext.JSON.decode(response);
                 } catch(e) {
                     Kwf.handleError(response, 'Upload Error');
                     return;
@@ -92,7 +90,7 @@ Ext2.extend(Kwf.Utils.SwfUpload, Ext2.util.Observable, {
                     this.customSettings.component.fireEvent('uploadSuccess', file, r);
                 } else {
                     if (r.wrongversion) {
-                        Ext2.Msg.alert(trlKwf('Error - wrong version'),
+                        Ext.Msg.alert(trlKwf('Error - wrong version'),
                         trlKwf('Because of an application update the application has to be reloaded.'),
                         function(){
                             location.reload();
@@ -108,12 +106,12 @@ Ext2.extend(Kwf.Utils.SwfUpload, Ext2.util.Observable, {
                             },
                             scope: this
                         });
-                        Ext2.getBody().unmask();
+                        Ext.getBody().unmask();
                         dlg.showLogin();
                         return;
                     }
                     if (r.error) {
-                        Ext2.Msg.alert(trlKwf('Error'), r.error);
+                        Ext.Msg.alert(trlKwf('Error'), r.error);
                     } else {
                         Kwf.handleError(r.exception, 'Error', !r.exception);
                     }
@@ -146,7 +144,7 @@ Ext2.extend(Kwf.Utils.SwfUpload, Ext2.util.Observable, {
                 }
                 if (errorCode != SWFUpload.UPLOAD_ERROR.FILE_CANCELLED) {
                     //Kwf.handleError(errorMessage, 'Upload Error');
-                    Ext2.Msg.alert(trlKwf("Upload Error"), message);
+                    Ext.Msg.alert(trlKwf("Upload Error"), message);
                 }
                 this.customSettings.component.fireEvent('uploadError', file, errorCode, errorMessage);
             },
@@ -161,7 +159,7 @@ Ext2.extend(Kwf.Utils.SwfUpload, Ext2.util.Observable, {
                 } else if (errorCode == SWFUpload.QUEUE_ERROR.INVALID_FILETYPE) {
                     message = trlKwf("File is not an allowed file type.");
                 }
-                Ext2.Msg.alert(trlKwf("Upload Error"), message);
+                Ext.Msg.alert(trlKwf("Upload Error"), message);
             },
             swfupload_loaded_handler: function() {
                 //wenn CallFunction nicht vorhanden funktioniert der uploader nicht.

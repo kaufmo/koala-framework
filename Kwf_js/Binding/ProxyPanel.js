@@ -1,9 +1,9 @@
-Kwf.Binding.ProxyPanel = Ext2.extend(Kwf.Binding.AbstractPanel,
-{
+Ext.define('Kwf.Binding.ProxyPanel', {
+    extend: 'Kwf.Binding.AbstractPanel',
     initComponent: function()
     {
         if (this.proxyItem) this.setProxyItem(this.proxyItem);
-        Kwf.Binding.ProxyPanel.superclass.initComponent.call(this);
+        this.callParent(arguments);
     },
     setProxyItem: function(i) {
         this.proxyItem = i;
@@ -55,7 +55,7 @@ Kwf.Binding.ProxyPanel = Ext2.extend(Kwf.Binding.AbstractPanel,
     getSupportsAdd : function() {
         return this.proxyItem.getSupportsAdd.apply(this.proxyItem, arguments);
     },
-    onAdd : function() {
-        return this.proxyItem.onAdd.apply(this.proxyItem, arguments);
+    onAddRecord : function() {
+        return this.proxyItem.onAddRecord.apply(this.proxyItem, arguments);
     }
 });

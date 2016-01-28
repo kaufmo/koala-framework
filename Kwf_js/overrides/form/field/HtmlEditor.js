@@ -1,4 +1,19 @@
-Kwf.Form.HtmlEditor = Ext2.extend(Ext2.form.HtmlEditor, {
+Ext.define('Kwf.overrides.form.field.HtmlEditor', {
+    override: 'Ext.form.field.HtmlEditor',
+    requires: [
+        'Kwf.Form.HtmlEditor.Formats',
+        'Kwf.Form.HtmlEditor.UndoRedo',
+        'Kwf.Form.HtmlEditor.InsertChar',
+        'Kwf.Form.HtmlEditor.PastePlain',
+        'Kwf.Form.HtmlEditor.Indent',
+        'Kwf.Form.HtmlEditor.InsertLink',
+        'Kwf.Form.HtmlEditor.InsertDownload',
+        'Kwf.Form.HtmlEditor.RemoveLink',
+        'Kwf.Form.HtmlEditor.InsertImage',
+        'Kwf.Form.HtmlEditor.Tidy',
+        'Kwf.Form.HtmlEditor.Styles',
+        'Kwf.Form.HtmlEditor.BreadCrumbs'
+    ],
     enableUndoRedo: true,
     enableInsertChar: true,
     enablePastePlain: true,
@@ -6,74 +21,77 @@ Kwf.Form.HtmlEditor = Ext2.extend(Ext2.form.HtmlEditor, {
 
     initComponent : function()
     {
-        if (!this.plugins) this.plugins = [];
+        //if (!this.plugins) this.plugins = [];
         if (this.enableFormat) {
-            this.plugins.push(new Kwf.Form.HtmlEditor.Formats());
+            this.addPlugin(new Kwf.Form.HtmlEditor.Formats());
             this.enableFormat = false; //ext implementation deaktivieren, unsere ist besser
         }
         if (this.enableUndoRedo) {
-            this.plugins.push(new Kwf.Form.HtmlEditor.UndoRedo());
+            this.addPlugin(new Kwf.Form.HtmlEditor.UndoRedo());
         }
         if (this.enableInsertChar) {
-            this.plugins.push(new Kwf.Form.HtmlEditor.InsertChar());
+            this.addPlugin(new Kwf.Form.HtmlEditor.InsertChar());
         }
         if (this.enablePastePlain) {
-            this.plugins.push(new Kwf.Form.HtmlEditor.PastePlain());
+            this.addPlugin(new Kwf.Form.HtmlEditor.PastePlain());
         }
-        this.plugins.push(new Kwf.Form.HtmlEditor.Indent());
+        this.addPlugin(new Kwf.Form.HtmlEditor.Indent());
         if (this.linkComponentConfig) {
-            this.plugins.push(new Kwf.Form.HtmlEditor.InsertLink({
+            this.addPlugin(new Kwf.Form.HtmlEditor.InsertLink({
                 componentConfig: this.linkComponentConfig
             }));
         }
         if (this.downloadComponentConfig) {
-            this.plugins.push(new Kwf.Form.HtmlEditor.InsertDownload({
+            this.addPlugin(new Kwf.Form.HtmlEditor.InsertDownload({
                 componentConfig: this.downloadComponentConfig
             }));
         }
         if (this.linkComponentConfig || this.downloadComponentConfig) {
-            this.plugins.push(new Kwf.Form.HtmlEditor.RemoveLink());
+            this.addPlugin(new Kwf.Form.HtmlEditor.RemoveLink());
         }
         if (this.imageComponentConfig) {
-            this.plugins.push(new Kwf.Form.HtmlEditor.InsertImage({
+            this.addPlugin(new Kwf.Form.HtmlEditor.InsertImage({
                 componentConfig: this.imageComponentConfig
             }));
         }
         if (this.controllerUrl && this.enableTidy) {
-            this.plugins.push(new Kwf.Form.HtmlEditor.Tidy());
+            this.addPlugin(new Kwf.Form.HtmlEditor.Tidy());
         }
         if (this.enableStyles) {
-            this.plugins.push(new Kwf.Form.HtmlEditor.Styles({
+            this.addPlugin(new Kwf.Form.HtmlEditor.Styles({
                 styles: this.styles,
                 stylesEditorConfig: this.stylesEditorConfig,
                 stylesIdPattern: this.stylesIdPattern
             }));
         }
-        this.plugins.push(new Kwf.Form.HtmlEditor.BreadCrumbs());
+        this.addPlugin(new Kwf.Form.HtmlEditor.BreadCrumbs());
 
-        Kwf.Form.HtmlEditor.superclass.initComponent.call(this);
+        this.callParent(arguments);
     },
     initEditor : function() {
-        Kwf.Form.HtmlEditor.superclass.initEditor.call(this);
+        this.callParent(arguments);
         if (this.cssFiles) {
             this.cssFiles.forEach(function(f) {
-                var s = this.doc.createElement('link');
+                var s = this.getDoc().createElement('link');
                 s.setAttribute('type', 'text/css');
                 s.setAttribute('href', f);
                 s.setAttribute('rel', 'stylesheet');
-                this.doc.getElementsByTagName("head")[0].appendChild(s);
+                this.getDoc().getElementsByTagName("head")[0].appendChild(s);
             }, this);
         }
 
         //wann text mit maus markiert wird muss die toolbar upgedated werden (link einfügen enabled)
         //dazu auch auf mouseup schauen
-        Ext2.EventManager.on(this.doc, {
-            'mouseup': this.onEditorEvent,
-            buffer:100,
-            scope: this
-        });
+        Ext.get(this.getDoc()).on('mouseup', this.onEditorEvent, this, {buffer: 100});
 
-        var KwfEditor = Ext2.extend(tinymce.Editor, {
+        var tinymceEditor = function() {};
+        tinymceEditor.prototype = tinymce.Editor.prototype;
+        var KwfEditor = function() {
+            tinymce.Editor.apply(this, arguments);
+        };
+        KwfEditor.prototype = new tinymceEditor();
+
+        Ext.apply(KwfEditor.prototype, {
             orgVisibility: '',
             extEditor: this,
             getDoc: function() {
@@ -118,22 +136,22 @@ Kwf.Form.HtmlEditor = Ext2.extend(Ext2.form.HtmlEditor, {
     // private
     // überschrieben wegen spezieller ENTER behandlung im IE die wir nicht wollen
     fixKeys : function() { // load time branching for fastest keydown performance
-        if (Ext2.isIE) {
+        if (Ext.isIE) {
             return function(e) {
                 var k = e.getKey(), r;
                 if (k == e.TAB){
                     e.stopEvent();
-                    r = this.doc.selection.createRange();
+                    r = this.getDoc().selection.createRange();
                     if (r) {
                         r.collapse(true);
                         r.pasteHTML('&nbsp;&nbsp;&nbsp;&nbsp;');
                         this.deferFocus();
                     }
-                //} else if (k == e.ENTER) {
+                    //} else if (k == e.ENTER) {
                     //entfernt, wir wollen dieses verhalten genau so wie der IE es macht
                 }
             };
-        } else if (Ext2.isOpera) {
+        } else if (Ext.isOpera) {
             return function(e) {
                 var k = e.getKey();
                 if (k == e.TAB) {
@@ -143,7 +161,7 @@ Kwf.Form.HtmlEditor = Ext2.extend(Ext2.form.HtmlEditor, {
                     this.deferFocus();
                 }
             };
-        } else if (Ext2.isWebKit) {
+        } else if (Ext.isWebKit) {
             return function(e) {
                 var k = e.getKey();
                 if (k == e.TAB) {
@@ -151,14 +169,14 @@ Kwf.Form.HtmlEditor = Ext2.extend(Ext2.form.HtmlEditor, {
                     this.execCmd('InsertText','\t');
                     this.deferFocus();
                 }
-             };
+            };
         }
     }(),
 
     getDocMarkup : function(){
         var ret = '<html><head>'+
             '<style type="text/css">'+
-                'body{border:0;margin:0;padding:3px;height:98%;cursor:text;}'+
+            'body{border:0;margin:0;padding:3px;height:98%;cursor:text;}'+
             '</style>\n';
         ret += '</head><body class="kwfUp-webStandard kwcText mce-content-body" id="tinymce" data-id="content"></body></html>';
         return ret;
@@ -168,7 +186,7 @@ Kwf.Form.HtmlEditor = Ext2.extend(Ext2.form.HtmlEditor, {
             this.componentId = v.componentId;
         }
         if (v && (typeof v.content) != 'undefined') v = v.content;
-        Kwf.Form.HtmlEditor.superclass.setValue.call(this, v);
+        this.callParent(arguments);
     },
 
     mask: function(txt) {
@@ -182,7 +200,7 @@ Kwf.Form.HtmlEditor = Ext2.extend(Ext2.form.HtmlEditor, {
     getFocusElement : function(tag)
     {
         if (tag == 'block') tag = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-                                    'pre', 'code', 'address'];
+            'pre', 'code', 'address'];
         var isNeededTag = function(t) {
             t = t.tagName.toLowerCase();
             if (tag.indexOf) {
@@ -204,8 +222,8 @@ Kwf.Form.HtmlEditor = Ext2.extend(Ext2.form.HtmlEditor, {
     //basiert auf Editor::nodeChanged
     getParents: function() {
         var s = this.tinymceEditor.selection;
-        var n = (Ext2.isIE ? s.getNode() : s.getStart()) || this.tinymceEditor.getBody();
-        n = Ext2.isIE && n.ownerDocument != this.tinymceEditor.getDoc() ? this.tinymceEditor.getBody() : n; // Fix for IE initial state
+        var n = (Ext.isIE ? s.getNode() : s.getStart()) || this.tinymceEditor.getBody();
+        n = Ext.isIE && n.ownerDocument != this.tinymceEditor.getDoc() ? this.tinymceEditor.getBody() : n; // Fix for IE initial state
         var parents = [];
         this.tinymceEditor.dom.getParent(n, function(node) {
             if (node.nodeName == 'BODY')
@@ -240,4 +258,3 @@ Kwf.Form.HtmlEditor = Ext2.extend(Ext2.form.HtmlEditor, {
         this.syncValue();
     }
 });
-Ext2.reg('htmleditor', Kwf.Form.HtmlEditor);

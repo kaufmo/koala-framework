@@ -1,4 +1,15 @@
-Kwf.Form.File = Ext2.extend(Ext2.form.Field, {
+Ext.define('Kwf.Form.File', {
+    extend: 'Ext.form.field.Base',
+    alias: 'widget.kwf.file',
+    requires: [
+        'Ext.button.Button',
+        'Ext.window.MessageBox',
+        'Kwf.Utils.SwfUpload',
+        'Kwf.Form.FileUploadWindow'
+    ],
+    uses: [
+        'Kwf.Utils.Upload'
+    ],
     allowOnlyImages: false,
     fileSizeLimit: 0,
     showPreview: true,
@@ -31,26 +42,24 @@ Kwf.Form.File = Ext2.extend(Ext2.form.Field, {
     emptyTpl: ['<div class="empty" style="height: {previewHeight}px; width: {previewWidth}px; text-align: center;line-height:{previewHeight}px">('+trlKwf('empty')+')</div>'],
 
     initComponent: function() {
-        this.addEvents(['uploaded']);
-
         if (this.showPreview) {
-            if (!(this.previewTpl instanceof Ext2.XTemplate)) {
-                this.previewTpl = new Ext2.XTemplate(this.previewTpl);
+            if (!(this.previewTpl instanceof Ext.XTemplate)) {
+                this.previewTpl = new Ext.XTemplate(this.previewTpl);
             }
             this.previewTpl.compile();
 
-            if (!(this.emptyTpl instanceof Ext2.XTemplate)) {
-                this.emptyTpl = new Ext2.XTemplate(this.emptyTpl);
+            if (!(this.emptyTpl instanceof Ext.XTemplate)) {
+                this.emptyTpl = new Ext.XTemplate(this.emptyTpl);
             }
             this.emptyTpl.compile();
         }
 
-        if (!(this.infoTpl instanceof Ext2.XTemplate)) {
-            this.infoTpl = new Ext2.XTemplate(this.infoTpl);
+        if (!(this.infoTpl instanceof Ext.XTemplate)) {
+            this.infoTpl = new Ext.XTemplate(this.infoTpl);
         }
         this.infoTpl.compile();
 
-        Kwf.Form.File.superclass.initComponent.call(this);
+        this.callParent(arguments);
 
     },
     afterRender: function() {
@@ -96,7 +105,7 @@ Kwf.Form.File = Ext2.extend(Ext2.form.Field, {
 
         this.createUploadButton();
         if (this.showDeleteButton) {
-            this.deleteButton = new Ext2.Button({
+            this.deleteButton = new Ext.Button({
                 text: trlKwf('Delete File'),
                 cls: 'x2-btn-text-icon',
                 icon: '/assets/silkicons/delete.png',
@@ -107,13 +116,13 @@ Kwf.Form.File = Ext2.extend(Ext2.form.Field, {
                 }
             });
         }
-        Kwf.Form.File.superclass.afterRender.call(this);
+        this.callParent(arguments);
 
         if (this.infoPosition == 'south') this.createInfoContainer();
 
         if (!Kwf.Utils.Upload.supportsHtml5Upload()) {
             this.uploadButtonContainer.dom.style.display = 'none';
-            this.el.child('.hint').setStyle('display', 'none');
+            this.el.down('.hint').setStyle('display', 'none');
             var insertBefore = this.deleteButton ? this.deleteButton.el.parent() : null;
 
             this.swfUploadButtonContainer = this.el.createChild({
@@ -131,14 +140,14 @@ Kwf.Form.File = Ext2.extend(Ext2.form.Field, {
                 this.uploadButtonContainer.show();
             }, this);
             this.swfu.on('fileQueued', function(file) {
-                this.progress = Ext2.MessageBox.show({
+                this.progress = Ext.MessageBox.show({
                     title : trlKwf('Upload'),
                     msg : trlKwf('Uploading file'),
                     buttons: false,
                     progress:true,
                     closable:false,
                     minWidth: 250,
-                    buttons: Ext2.MessageBox.CANCEL,
+                    buttons: Ext.MessageBox.CANCEL,
                     scope: this,
                     fn: function(button) {
                         this.swfu.cancelUpload(file.id);
@@ -185,7 +194,7 @@ Kwf.Form.File = Ext2.extend(Ext2.form.Field, {
         while (this.uploadButtonContainer.last()) {
             this.uploadButtonContainer.last().remove();
         }
-        this.uploadButton = new Ext2.Button({
+        this.uploadButton = new Ext.Button({
             text: trlKwf('Upload File'),
             cls: 'x2-btn-text-icon',
             icon: '/assets/silkicons/add.png',
@@ -236,14 +245,14 @@ Kwf.Form.File = Ext2.extend(Ext2.form.Field, {
 
     html5UploadFile: function(file)
     {
-        this.progress = Ext2.MessageBox.show({
+        this.progress = Ext.MessageBox.show({
             title : trlKwf('Upload'),
             msg : trlKwf('Uploading file'),
             buttons: false,
             progress:true,
             closable:false,
             minWidth: 250,
-            buttons: Ext2.MessageBox.CANCEL,
+            buttons: Ext.MessageBox.CANCEL,
             scope: this,
             fn: function(button) {
                 xhr.abort();
@@ -283,9 +292,9 @@ Kwf.Form.File = Ext2.extend(Ext2.form.Field, {
             v = value.uploadId;
         }
         if (v) {
-            this.addClass('file-uploaded');
+            this.addCls('file-uploaded');
         } else {
-            this.removeClass('file-uploaded');
+            this.removeCls('file-uploaded');
         }
         if (v != this.value) {
             this.imageData = value;
@@ -309,7 +318,7 @@ Kwf.Form.File = Ext2.extend(Ext2.form.Field, {
 
                 var infoVars = Kwf.clone(value);
                 infoVars.href = href;
-                this.infoContainer.addClass('info-container');
+                this.infoContainer.addCls('info-container');
                 this.infoTpl.overwrite(this.infoContainer, infoVars);
             } else {
                 if (this.showPreview) {
@@ -333,17 +342,17 @@ Kwf.Form.File = Ext2.extend(Ext2.form.Field, {
     setPreviewUrl: function (previewUrl) {
         this.previewUrl = previewUrl;
         if (!previewUrl) {
-            this.getEl().child('.box').setStyle('background-image', 'none');
+            this.getEl().down('.box').setStyle('background-image', 'none');
             return;
         }
-        if (this.getEl().child('.previewImage') && this.imageData) {
-            this.getEl().child('.box').setStyle('background-image', 'url(/assets/ext2/resources/images/default/grid/loading.gif)');
+        if (this.getEl().down('.previewImage') && this.imageData) {
+            this.getEl().down('.box').setStyle('background-image', 'url(/assets/ext2/resources/images/default/grid/loading.gif)');
             var img = new Image();
             img.onload = (function () {
-                this.getEl().child('.box').setStyle('background-image', 'none');
+                this.getEl().down('.box').setStyle('background-image', 'none');
             }).createDelegate(this);
             img.src = this._generatePreviewUrl(previewUrl);
-            this.getEl().child('.previewImage')
+            this.getEl().down('.previewImage')
                 .setStyle('background-image', 'url('+this._generatePreviewUrl(previewUrl)+')');
         }
     },
@@ -362,11 +371,3 @@ Kwf.Form.File = Ext2.extend(Ext2.form.Field, {
     }
 
 });
-
-
-
-Ext2.reg('kwf.file', Kwf.Form.File);
-
-
-
-

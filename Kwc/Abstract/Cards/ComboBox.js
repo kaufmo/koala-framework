@@ -1,15 +1,18 @@
-Ext2.ns('Kwc.Abstract.Cards');
-Kwc.Abstract.Cards.ComboBox = Ext2.extend(Kwf.Form.ComboBox, {
+Ext.define('Kwc.Abstract.Cards.ComboBox', {
+    extend: 'Ext.form.field.ComboBox',
+    alias: 'widget.kwc.abstract.cards.combobox',
+    uses: [
+        'Kwf.Auto.FormPanel'
+    ],
     setValue: function(v) {
-        Kwc.Abstract.Cards.ComboBox.superclass.setValue.call(this, v);
+        this.callParent(arguments);
     },
 
     doQuery : function(q, forceAll){
         var form = this.findParentBy(function(p) { return (p instanceof Kwf.Auto.FormPanel); });
-        this.store.baseParams.id = form.getBaseParams().id;
-        this.store.baseParams.parent_id = form.getBaseParams().parent_id;
+        this.store.getProxy().extraParams.id = form.getBaseParams().id;
+        this.store.getProxy().extraParams.parent_id = form.getBaseParams().parent_id;
         delete this.lastQuery;
-        return Kwc.Abstract.Cards.ComboBox.superclass.doQuery.apply(this, arguments);
+        return this.callParent(arguments);
     }
 });
-Ext2.reg('kwc.abstract.cards.combobox', Kwc.Abstract.Cards.ComboBox);

@@ -1,8 +1,9 @@
-
-Ext2.namespace("Kwf.User.Grid");
-
-Kwf.User.Grid.Index = Ext2.extend(Ext2.Panel, {
-
+Ext.define('Kwf.User.Grid.Index', {
+    extend: 'Ext.panel.Panel',
+    requires: [
+        'Kwf.Auto.GridPanel',
+        'Kwf.User.Grid.Grid'
+    ],
     initComponent: function() {
         var bindings = [];
         var southPanelItems = [ ];
@@ -34,7 +35,7 @@ Kwf.User.Grid.Index = Ext2.extend(Ext2.Panel, {
         }
 
         if (typeof commentsGrid != 'undefined' || typeof logGrid != 'undefined') {
-            var southPanel = new Ext2.Panel({
+            var southPanel = new Ext.Panel({
                 layout: 'border',
                 items: southPanelItems,
                 region: 'south',
@@ -56,6 +57,6 @@ Kwf.User.Grid.Index = Ext2.extend(Ext2.Panel, {
             this.items.push(southPanel);
         }
 
-        Kwf.User.Grid.Index.superclass.initComponent.call(this);
+        this.callParent(arguments);
     }
 });

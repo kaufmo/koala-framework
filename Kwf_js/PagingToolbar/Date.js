@@ -16,7 +16,7 @@ Kwf.PagingToolbar.Date = Ext2.extend(Ext2.PagingToolbar, {
         });
         this.addSeparator();
 
-        this.field = new Kwf.Form.DateField({
+        this.field = new Ext.form.field.Date({
             width: 80
         });
         this.add(this.field);

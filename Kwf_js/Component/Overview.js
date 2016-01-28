@@ -1,6 +1,13 @@
-Kwf.Component.Overview = Ext2.extend(Kwf.Auto.GridPanel, {
+Ext.define('Kwf.Component.Overview', {
+    extend: 'Kwf.Auto.GridPanel',
+    requires: [
+        'Ext.Action',
+        'Ext.form.field.ComboBox',
+        'Ext.form.field.Text',
+        'Ext.window.Window'
+    ],
     initComponent : function() {
-        Kwf.Component.Overview.superclass.initComponent.call(this);
+        this.callParent(arguments);
         this.on('selectionchange', function() {
             if (this.getSelected()) {
                 this.getAction('createTpl').enable();
@@ -16,52 +23,50 @@ Kwf.Component.Overview = Ext2.extend(Kwf.Auto.GridPanel, {
         if (this.actions[type]) return this.actions[type];
 
         if (type == 'createTpl') {
-            this.actions[type] = new Ext2.Action({
+            this.actions[type] = new Ext.Action({
                 text    : 'create tpl',
                 icon    : '/assets/silkicons/page_copy.png',
-                cls     : 'x2-btn-text-icon',
+                cls     : 'x-btn-text-icon',
                 disabled: true,
-                handler : this.onCreate.createDelegate(this,
-                                [ 'tpl' ]),
+                handler : this.onCreate.createDelegate(this, [ 'tpl' ]),
                 scope   : this
             });
         } else if (type == 'createCss') {
-            this.actions[type] = new Ext2.Action({
+            this.actions[type] = new Ext.Action({
                 text    : 'create css',
                 icon    : '/assets/silkicons/page_copy.png',
-                cls     : 'x2-btn-text-icon',
+                cls     : 'x-btn-text-icon',
                 disabled: true,
-                handler : this.onCreate.createDelegate(this,
-                                [ 'css' ]),
+                handler : this.onCreate.createDelegate(this, [ 'css' ]),
                 scope: this
             });
         } else if (type == 'addComponent') {
-            this.actions[type] = new Ext2.Action({
+            this.actions[type] = new Ext.Action({
                 text    : 'add component',
                 icon    : '/assets/silkicons/brick_add.png',
-                cls     : 'x2-btn-text-icon',
+                cls     : 'x-btn-text-icon',
                 handler : this.onAddComponent,
                 scope: this
             });
         }
-        return Kwf.Component.Overview.superclass.getAction.call(this, type);
+        return this.callParent(arguments);
     },
 
     onCreate : function(createType)
     {
         if (!this.getSelected()) return;
-        Ext2.getBody().mask(trlKwf('Copying...'));
-        Ext2.Ajax.request({
+        Ext.getBody().mask(trlKwf('Copying...'));
+        Ext.Ajax.request({
             url: this.controllerUrl+'/json-create',
             params: { type: createType, 'class': this.getSelected().data['class'] },
             success: function(a, b, r) {
                 this.reload();
-                Ext2.Msg.alert(trlKwf('create')+' '+createType,
+                Ext.Msg.alert(trlKwf('create')+' '+createType,
                               trlKwf("File successfully created:")+" "+r.path);
             },
             scope: this,
             callback: function() {
-                Ext2.getBody().unmask();
+                Ext.getBody().unmask();
             }
         });
     },
@@ -82,7 +87,7 @@ Kwf.Component.Overview = Ext2.extend(Kwf.Auto.GridPanel, {
                 data: data
             }
         });
-        var name = new Ext2.form.TextField({
+        var name = new Ext.form.TextField({
             width: 300,
             fieldLabel: 'Name',
             allowBlank: false
@@ -94,14 +99,14 @@ Kwf.Component.Overview = Ext2.extend(Kwf.Auto.GridPanel, {
                 name.setValue(record.data.id.replace('Kwc_', m[1]));
             }
         }, this);
-        var dlg = new Ext2.Window({
+        var dlg = new Ext.Window({
             title: trlKwf('Add Component'),
             width: 450,
             modal: true,
             items: [{
                 xtype: 'form',
                 plain: true,
-                baseCls: 'x2-plain',
+                baseCls: 'x-plain',
                 bodyStyle: 'padding: 10px',
                 items: [component, name]
             }],
@@ -109,19 +114,19 @@ Kwf.Component.Overview = Ext2.extend(Kwf.Auto.GridPanel, {
                 text: 'OK',
                 handler: function() {
                     dlg.close();
-                    Ext2.getBody().mask(trlKwf('Creating...'));
-                    Ext2.Ajax.request({
+                    Ext.getBody().mask(trlKwf('Creating...'));
+                    Ext.Ajax.request({
                         url: this.controllerUrl+'/json-add-component',
                         params: {
                             'class': component.getValue(),
                             name: name.getValue()
                         },
                         success: function(a,b,r) {
-                                Ext2.Msg.alert(trlKwf('Add Component'),
-                                        trlKwf("File successfully created: ")+r.path);
+                            Ext.Msg.alert(trlKwf('Add Component'),
+                                    trlKwf("File successfully created: ")+r.path);
                         },
                         callback: function() {
-                            Ext2.getBody().unmask();
+                            Ext.getBody().unmask();
                         },
                         scope: this
                     });

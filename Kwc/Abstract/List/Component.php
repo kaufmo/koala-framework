@@ -12,7 +12,7 @@ class Kwc_Abstract_List_Component extends Kwc_Abstract
             'class' => 'Kwc_Abstract_List_Generator',
             'component' => null
         );
-        $ret['assetsAdmin']['dep'][] = 'KwfProxyPanel';
+//        $ret['assetsAdmin']['dep'][] = 'KwfProxyPanel';
         $ret['assetsAdmin']['dep'][] = 'KwfAutoGrid';
         $ret['assetsAdmin']['dep'][] = 'KwfMultiFileUploadPanel';
         $ret['assetsAdmin']['files'][] = 'kwf/Kwc/Abstract/List/EditButton.js';

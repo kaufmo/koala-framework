@@ -1,5 +1,11 @@
-Ext2.namespace("Kwf.Redirects");
-Kwf.Redirects.Index = Ext2.extend(Ext2.Panel, {
+Ext.define('Kwf.Redirects.Index', {
+    extend: 'Ext.panel.Panel',
+    requires: [
+        'Kwf.Form.Cards',
+        'Kwf.Form.PageSelect',
+        'Kwf.Auto.GridPanel',
+        'Kwf.Auto.FormPanel'
+    ],
     initComponent: function() {
         var form = new Kwf.Auto.FormPanel({
             controllerUrl: '/kwf/redirects/redirect',
@@ -13,11 +19,9 @@ Kwf.Redirects.Index = Ext2.extend(Ext2.Panel, {
             bindings: [ form ]
         });
 
-
-
         this.layout = 'border';
         this.items = [ grid, form ];
 
-        Kwf.Redirects.Index.superclass.initComponent.call(this);
+        this.callParent(arguments);
     }
 });

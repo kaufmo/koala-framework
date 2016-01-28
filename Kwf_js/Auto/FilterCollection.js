@@ -1,21 +1,28 @@
-Ext2.namespace('Kwf.Auto');
-Kwf.Auto.FilterCollection = function(filters, scope)
-{
-    Kwf.Auto.FilterCollection.superclass.constructor.call(this);
+Ext.define('Kwf.Auto.FilterCollection', {
+    extend: 'Ext.util.MixedCollection',
+    requires: [
+        'Kwf.Auto.Filter.Button',
+        'Kwf.Auto.Filter.ButtonGroup',
+        'Kwf.Auto.Filter.ComboBox',
+        'Kwf.Auto.Filter.Date',
+        'Kwf.Auto.Filter.DateRange',
+        'Kwf.Auto.Filter.Text',
+        'Kwf.Auto.Filter.TextColumn'
+    ],
+    constructor: function(filters, scope) {
+        this.callParent(arguments);
 
-    for (var i = 0; i < filters.length; i++) {
-        var f = filters[i];
-        if (!Kwf.Auto.Filter[f.type]) {
-            throw "Unknown filter.type: "+f.type;
+        for (var i = 0; i < filters.length; i++) {
+            var f = filters[i];
+            if (!Kwf.Auto.Filter[f.type]) {
+                throw "Unknown filter.type: "+f.type;
+            }
+            var type = Kwf.Auto.Filter[f.type];
+            delete f.type;
+            var filterField = new type(f);
+            this.add(i, filterField);
         }
-        var type = Kwf.Auto.Filter[f.type];
-        delete f.type;
-        var filterField = new type(f);
-        this.add(filterField);
-    }
-};
-
-Ext2.extend(Kwf.Auto.FilterCollection, Ext2.util.MixedCollection, {
+    },
     applyToTbar : function(tbar, limit, offset)
     {
         var limitCount = 0;

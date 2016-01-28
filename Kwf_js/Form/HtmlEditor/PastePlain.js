@@ -1,35 +1,40 @@
-Kwf.Form.HtmlEditor.PastePlain = Ext2.extend(Ext2.util.Observable, {
+Ext.define('Kwf.Form.HtmlEditor.PastePlain', {
+    extend: 'Ext.mixin.Observable',
+    requires: [
+        'Ext.window.MessageBox',
+        'Ext.button.Button'
+    ],
     init: function(cmp){
         this.cmp = cmp;
-        this.cmp.afterMethod('createToolbar', this.afterCreateToolbar, this);
+        this.cmp.on('afterRender', this.afterCreateToolbar, this);
     },
 
     // private
     afterCreateToolbar: function() {
         var tb = this.cmp.getToolbar();
-        tb.insert(10, {
+        tb.insert(10, new Ext.Button({
             icon: '/assets/kwf/images/pastePlain.gif',
             handler: this.onPastePlain,
             scope: this,
             tooltip: {
-                cls: 'x2-html-editor-tip',
+                cls: 'x-html-editor-tip',
                 title: trlKwf('Insert Plain Text'),
                 text: trlKwf('Insert text without formating.')
             },
-            cls: 'x2-btn-icon',
+            cls: 'x-btn-icon',
             clickEvent: 'mousedown',
             tabIndex: -1
 
-        });
+        }));
         tb.insert(11, '-');
     },
 
     onPastePlain: function() {
         var bookmark = this.cmp.tinymceEditor.selection.getBookmark();
-        Ext2.Msg.show({
+        Ext.Msg.show({
             title : trlKwf('Insert Plain Text'),
             msg : '',
-            buttons: Ext2.Msg.OKCANCEL,
+            buttons: Ext.Msg.OKCANCEL,
             fn: function(btn, text) {
                 if (btn == 'ok') {
                     this.cmp.tinymceEditor.selection.moveToBookmark(bookmark);

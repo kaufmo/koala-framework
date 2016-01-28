@@ -1,5 +1,9 @@
-Kwf.Form.ShowField = Ext2.extend(Ext2.form.Field,
-{
+Ext.define('Kwf.Form.ShowField', {
+    extend: 'Ext.form.field.Base',
+    alias: 'widget.showfield',
+    requires: [
+        'Ext.XTemplate'
+    ],
     defaultAutoCreate : {tag: 'div', cls: 'kwf-form-show-field'},
     /**
      * {value} wenn kein objekt übergeben, sonst index aus objekt
@@ -12,8 +16,8 @@ Kwf.Form.ShowField = Ext2.extend(Ext2.form.Field,
         }
     },
     afterRender : function(){
-        Kwf.Form.ShowField.superclass.afterRender.call(this);
-        if (typeof this.tpl == 'string') this.tpl = new Ext2.XTemplate(this.tpl);
+        this.callParent(arguments);
+        if (typeof this.tpl == 'string') this.tpl = new Ext.XTemplate(this.tpl);
         this.tpl.compile();
         this.setRawValue("&nbsp;"); //bugfix für IE 7 -> /kwf/test/kwf_form_show-field_value-overlaps-error
     },
@@ -46,4 +50,3 @@ Kwf.Form.ShowField = Ext2.extend(Ext2.form.Field,
         }
     }
 });
-Ext2.reg('showfield', Kwf.Form.ShowField);

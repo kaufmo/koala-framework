@@ -1,13 +1,16 @@
-(function(){
-
-var T = Ext2.Toolbar;
-
-Ext2.override(T, {
+Ext.define('Kwf.overrides.toolbar.Toolbar', {
+    override: 'Ext.toolbar.Toolbar',
+    requires: [
+        'Ext.toolbar.TextItem',
+        'Ext.toolbar.Fill',
+        'Ext.toolbar.Separator',
+        'Ext.toolbar.Spacer'
+    ],
     insertItem: function(index, item) {
-        var td = document.createElement("td");
-        this.tr.insertBefore(td, this.tr.childNodes[index]);
-        this.initMenuTracking(item);
-        item.render(td);
+        //var td = document.createElement("td");
+        ////this.tr.insertBefore(td, this.tr.childNodes[index]);
+        //this.initMenuTracking(item);
+        //item.render(td);
         this.items.insert(index, item);
         return item;
     },
@@ -34,46 +37,46 @@ Ext2.override(T, {
                 return this.insertElement(idx, el);
             }else if(typeof el == "object"){ // must be button config?
                 if(el.xtype){
-                    return this.insertField(idx, Ext2.ComponentMgr.create(el, 'button'));
+                    return this.insertField(idx, Ext.create(el));
                 }else{
-                    return this.insertButton(idx, el);
+                    return this.insertItem(idx, el);
                 }
             }
         }
     },
     insertText : function(index, text){
-        return this.insertItem(index, new T.TextItem(text));
+        return this.insertItem(index, new Ext.toolbar.TextItem({
+            html: text
+        }));
     },
     insertElement : function(index, el){
-        return this.insertItem(index, new T.Item(el));
+        return this.insertItem(index, new Ext.toolbar.Item(el));
     },
     insertFill : function(index){
-        return this.insertItem(index, T.Fill());
+        return this.insertItem(index, new Ext.toolbar.Fill());
     },
     insertSeparator : function(index){
-        return this.insertItem(index, new T.Separator());
+        return this.insertItem(index, new Ext.toolbar.Separator());
     },
     insertSpacer : function(index){
-        return this.insertItem(index, new T.Spacer());
+        return this.insertItem(index, new Ext.toolbar.Spacer());
     },
     insertDom : function(index, config){
         var td = document.createElement("td");
         this.tr.insertBefore(td, this.tr.childNodes[index]);
-        Ext2.DomHelper.overwrite(td, config);
-        var ti = new T.Item(td.firstChild);
+        Ext.DomHelper.overwrite(td, config);
+        var ti = new Ext.toolbar.Item(td.firstChild);
         ti.render(td);
         this.items.add(ti);
         return ti;
     },
     insertField : function(index, field){
-        var td = document.createElement("td");
-        this.tr.insertBefore(td, this.tr.childNodes[index]);
-        field.render(td);
-        var ti = new T.Item(td.firstChild);
-        ti.render(td);
-        this.items.add(ti);
-        return ti;
+        //var td = document.createElement("td");
+        //this.tr.insertBefore(td, this.tr.childNodes[index]);
+        //field.render(td);
+        //var ti = new Ext.toolbar.Item(field);
+        //ti.render(td);
+        this.items.add(field);
+        return field;
     }
 });
-
-})();

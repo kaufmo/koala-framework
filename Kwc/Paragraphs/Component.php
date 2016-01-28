@@ -13,8 +13,8 @@ class Kwc_Paragraphs_Component extends Kwc_Abstract
         ));
         $ret['childModel'] = 'Kwc_Paragraphs_Model';
         $ret['assetsAdmin']['files'][] = 'kwf/Kwc/Paragraphs/Panel.js';
-        $ret['assetsAdmin']['files'][] = 'kwf/Kwc/Paragraphs/DataView.js';
-        $ret['assetsAdmin']['files'][] = 'kwf/Kwc/Paragraphs/AddParagraphButton.js';
+        //$ret['assetsAdmin']['files'][] = 'kwf/Kwc/Paragraphs/DataView.js';
+        //$ret['assetsAdmin']['files'][] = 'kwf/Kwc/Paragraphs/AddParagraphButton.js';
         $ret['assetsAdmin']['files'][] = 'kwf/Kwc/Paragraphs/Panel.css';
         $ret['assetsAdmin']['dep'][] = 'KwfAutoGrid';
         $ret['assetsAdmin']['dep'][] = 'KwfLegacyOnReady';

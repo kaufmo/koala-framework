@@ -1,21 +1,25 @@
-Ext2.namespace('Kwc.Abstract.Image');
-Kwc.Abstract.Image.ImageUploadField = Ext2.extend(Ext2.Panel, {
-
+Ext.define('Kwc.Abstract.Image.ImageUploadField', {
+    extend: 'Ext.panel.Panel',
+    alias: 'widget.kwc.image.imageuploadfield',
+    uses: [
+        'Kwc.Abstract.Image.CropImage',
+        'Kwc.Abstract.Image.DimensionField'
+    ],
     _scaleFactor: null,
     baseParams: null,
 
     initComponent: function() {
         this.baseParams = {};
-        Kwc.Abstract.Image.ImageUploadField.superclass.initComponent.call(this);
+        this.callParent(arguments);
         var dimensionField = this._getDimensionField();
         if (dimensionField) {// because it's possible to define only a single dimension
             dimensionField.on('render', function () {
                 // fileUploadField also has to be rendered
                 var dimensionField = this._getDimensionField();
                 var fileUploadField = this._getFileUploadField();
-                fileUploadField.container.addClass('kwc-abstract-image-imageuploadfile-container');
+                fileUploadField.container.addCls('kwc-abstract-image-imageuploadfile-container');
                 if (dimensionField.getEl() && fileUploadField.getEl()) {
-                    dimensionField.getEl().parent().parent().addClass('kwc-dimensionfield-container');
+                    dimensionField.getEl().parent().parent().addCls('kwc-dimensionfield-container');
                 }
             }, this);
             dimensionField.on('change', function (dimension) {
@@ -32,10 +36,10 @@ Kwc.Abstract.Image.ImageUploadField = Ext2.extend(Ext2.Panel, {
             if (!value || !value.mimeType || !value.mimeType.match(/(^image\/)/)) {
                 dimensionField.newImageUploaded('');
                 this._getFileUploadField().setPreviewUrl(null);
-                this.removeClass('image-uploaded');
+                this.removeCls('image-uploaded');
                 return;
             }
-            this.addClass('image-uploaded');
+            this.addCls('image-uploaded');
             var dimensionValue = null;
             if (dimensionField) {
                 this._scaleFactor = value.imageHandyScaleFactor;
@@ -54,19 +58,19 @@ Kwc.Abstract.Image.ImageUploadField = Ext2.extend(Ext2.Panel, {
         var dimensionField = this._getDimensionField();
         var value = Kwf.clone(dimensionField.getValue());
         var fileUploadField = this._getFileUploadField();
-        if (!fileUploadField.getEl().child('.hover-background')) return;
+        if (!fileUploadField.getEl().down('.hover-background')) return;
         var scaleFactor = this._scaleFactor;
         this._validateImageTooSmallUserNotification(value, dimensionField.resolvedDimensions, scaleFactor, fileUploadField, dimensionField, dimensionField.dpr2Check);
     },
 
     _validateImageTooSmallUserNotification: function (value, dimensions, scaleFactor, fileUploadField, dimensionField, dpr2) {
-        if (!fileUploadField.getEl().child('.hover-background .message')) {
-            fileUploadField.getEl().child('.hover-background').createChild({
+        if (!fileUploadField.getEl().down('.hover-background .message')) {
+            fileUploadField.getEl().down('.hover-background').createChild({
                 html:trlKwf('Caution! Image size of uploaded image does not match minimum requirement.'),
                 cls: 'message'
             });
         } else {
-            fileUploadField.getEl().child('.hover-background .message')
+            fileUploadField.getEl().down('.hover-background .message')
                 .update(trlKwf('Caution! Image size of uploaded image does not match minimum requirement.'));
         }
         if (!value.cropData) {
@@ -75,24 +79,24 @@ Kwc.Abstract.Image.ImageUploadField = Ext2.extend(Ext2.Panel, {
                 .calculateDefaultCrop(dimension.width, dimension.height,
                     dimensionField.imageData.imageWidth, dimensionField.imageData.imageHeight);
         } else {
-            fileUploadField.getEl().child('.hover-background .message')
+            fileUploadField.getEl().down('.hover-background .message')
                 .update(trlKwf('Caution! Crop region does not match minimum requirement.'));
         }
         if (!Kwc.Abstract.Image.DimensionField.isValidImageSize(value, dimensions, scaleFactor, dpr2)) {
-            this.getEl().addClass('error');
-            fileUploadField.getEl().child('.hover-background').addClass('error');
+            this.getEl().addCls('error');
+            fileUploadField.getEl().down('.hover-background').addCls('error');
         } else {
-            this.getEl().removeClass('error');
-            fileUploadField.getEl().child('.hover-background').removeClass('error');
+            this.getEl().removeCls('error');
+            fileUploadField.getEl().down('.hover-background').removeCls('error');
         }
     },
 
     _getFileUploadField: function () {
-        return this.findByType('kwc.imagefile')[0];
+        return this.query('[xtype=kwc.imagefile]')[0];
     },
 
     _getDimensionField: function () {
-        return this.findByType('kwc.image.dimensionfield')[0];
+        return this.query('[xtype=kwc.image.dimensionfield]')[0];
     },
 
     _setPreviewUrl: function(value) {
@@ -137,13 +141,11 @@ Kwc.Abstract.Image.ImageUploadField = Ext2.extend(Ext2.Panel, {
         }
 
         this._getFileUploadField().setPreviewUrl(this.previewUrl+'?'
-            +Ext2.urlEncode(previewParams)+'&'
+            +Ext.urlEncode(previewParams)+'&'
         );
     },
 
     setFormBaseParams: function(params) {
-        Ext2.apply(this.baseParams, params);
+        Ext.apply(this.baseParams, params);
     }
 });
-
-Ext2.reg('kwc.image.imageuploadfield', Kwc.Abstract.Image.ImageUploadField);

@@ -1,9 +1,10 @@
-Kwc.Abstract.Image.ImageFile = Ext2.extend(Kwf.Form.File, {
-
+Ext.define('Kwc.Abstract.Image.ImageFile', {
+    extend: 'Kwf.Form.File',
+    alias: 'widget.kwc.imagefile',
     _completeValue: null,
 
     initComponent: function() {
-        Kwc.Abstract.Image.ImageFile.superclass.initComponent.call(this);
+        this.callParent(arguments);
         this.on('uploaded', function(field, value) {
             if (value) {
                 var fs = this.ownerCt.ownerCt.items.find(function(i){return i.xtype=='fieldset'});
@@ -21,7 +22,7 @@ Kwc.Abstract.Image.ImageFile = Ext2.extend(Kwf.Form.File, {
     },
 
     afterRender: function() {
-        Kwc.Abstract.Image.ImageFile.superclass.afterRender.call(this);
+        this.callParent(arguments);
         this.deleteButton.setText(trlKwf('delete'));
         this.uploadButton.setText(trlKwf('Upload Image'));
     },
@@ -41,8 +42,6 @@ Kwc.Abstract.Image.ImageFile = Ext2.extend(Kwf.Form.File, {
         } else {
             this.uploadButton.setText(trlKwf('Upload Image'));
         }
-        Kwc.Abstract.Image.ImageFile.superclass.setValue.call(this, value);
+        this.callParent(arguments);
     }
 });
-
-Ext2.reg('kwc.imagefile', Kwc.Abstract.Image.ImageFile);

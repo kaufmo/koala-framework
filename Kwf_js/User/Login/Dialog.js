@@ -1,6 +1,8 @@
-Ext2.namespace('Kwf.User.Login');
-Kwf.User.Login.Dialog = Ext2.extend(Ext2.Window,
-{
+Ext.define('Kwf.User.Login.Dialog', {
+    extend: 'Ext.window.Window',
+    requires: [
+        'Ext.button.Button'
+    ],
     initComponent: function()
     {
         this.height = 275+50;
@@ -10,23 +12,23 @@ Kwf.User.Login.Dialog = Ext2.extend(Ext2.Window,
         this.resizable = false;
         this.closable = true;
         this.layout = 'border';
-        this.loginPanel = new Ext2.Panel({
-            baseCls: 'x2-plain',
+        this.loginPanel = new Ext.Panel({
+            baseCls: 'x-plain',
             region: 'center',
             border: false,
             height: 120,
             html: '<iframe scrolling="no" src="/kwf/user/login/show-form" width="100%" '+
                     'height="100%" style="border: 0px"></iframe>'
         });
-        this.lostPasswordButton = new Ext2.Button({
+        this.lostPasswordButton = new Ext.Button({
             text    : trlKwf('Lost password?'),
             style   : 'position: absolute; z-index: 500000; margin-top: -40px; margin-left: -270px;',
             handler : this.lostPassword,
             scope   : this,
             hidden  : true
         });
-        this.loginPanelContainer = new Ext2.Panel({
-            baseCls: 'x2-plain',
+        this.loginPanelContainer = new Ext.Panel({
+            baseCls: 'x-plain',
             region: 'center',
             border: false,
             layout: 'fit',
@@ -35,15 +37,15 @@ Kwf.User.Login.Dialog = Ext2.extend(Ext2.Window,
                 this.lostPasswordButton
             ]
         });
-        this.redirectsPanel = new Ext2.Panel({
-            baseCls: 'x2-plain',
+        this.redirectsPanel = new Ext.Panel({
+            baseCls: 'x-plain',
             region: 'south',
             height: 100,
             border: false
         });
 
         this.items = [{
-            baseCls: 'x2-plain',
+            baseCls: 'x-plain',
             cls: 'kwf-login-header',
             region: 'north',
             height: 80,
@@ -51,10 +53,10 @@ Kwf.User.Login.Dialog = Ext2.extend(Ext2.Window,
             border: false
         },{
             region: 'center',
-            baseCls: 'x2-plain',
+            baseCls: 'x-plain',
             border: false,
             items: [{
-                baseCls: 'x2-plain',
+                baseCls: 'x-plain',
                 region: 'north',
                 height: 40,
                 bodyStyle: 'padding: 10px;',
@@ -65,16 +67,16 @@ Kwf.User.Login.Dialog = Ext2.extend(Ext2.Window,
             ]
         }, ];
 
-        Ext2.Ajax.request({
+        Ext.Ajax.request({
             url: '/kwf/user/login/json-get-auth-methods',
             success: function(response, options, r) {
                 if (r.showPassword) {
                     this.lostPasswordButton.show();
                     this.loginPanelContainer.add(this.loginPanel);
-                    this.loginPanelContainer.doLayout();
+                    this.loginPanelContainer.updateLayout();
                 }
                 if (r.redirects.length) {
-                    var tpl = new Ext2.XTemplate([
+                    var tpl = new Ext.XTemplate([
                         '<ul>',
                         '<tpl for=".">',
                             '<li>',
@@ -102,7 +104,7 @@ Kwf.User.Login.Dialog = Ext2.extend(Ext2.Window,
                         '</ul>'
                     ]);
                     tpl.overwrite(this.redirectsPanel.body, r.redirects);
-                    this.redirectsPanel.body.select('a').each(function(a) {
+                    this.redirectsPanel.body.query('a', false).each(function(a) {
                         a.on('click', function(ev) {
                             ev.preventDefault();
                             window.ssoCallback = (function(sessionToken) {
@@ -110,8 +112,8 @@ Kwf.User.Login.Dialog = Ext2.extend(Ext2.Window,
                                 this.afterLogin();
                                 delete window.ssoCallback;
                             }).bind(this);
-                            var values = Ext2.lib.Ajax.serializeForm(Ext2.fly(ev.getTarget()).parent('form').dom);
-                            var href = Ext2.fly(ev.getTarget()).parent('a').dom.href;
+                            var values = Ext.dom.Element.serializeForm(Ext.fly(ev.getTarget()).parent('form').dom);
+                            var href = Ext.fly(ev.getTarget()).parent('a').dom.href;
                             href += '&redirect=jsCallback&'+values;
                             window.open(href, 'sso', 'width=800,height=600');
                         }, this);
@@ -124,21 +126,21 @@ Kwf.User.Login.Dialog = Ext2.extend(Ext2.Window,
         });
 
         this.loginPanel.on('render', function(panel) {
-            var frame = this.loginPanel.body.first('iframe');
+            var frame = this.loginPanel.body.selectNode('iframe', false);
             // IE sux :)
             // Das direkte this.onLoginLoad() in der nächsten Zeile muss wegen IE sein
             // da der das tlw. direkt im cache hat und das frame.onLoad nicht mitkriegt
             this.onLoginLoad();
-            Ext2.EventManager.on(frame, 'load', this.onLoginLoad, this);
+            frame.on('load', this.onLoginLoad, this);
         }, this, { delay: 1 });
 
 
-        Kwf.User.Login.Dialog.superclass.initComponent.call(this);
+        this.callParent(arguments);
     },
 
     _getDoc: function() {
-        var frame = this.loginPanel.body.first('iframe');
-        if(Ext2.isIE){
+        var frame = this.loginPanel.body.selectNode('iframe', false);
+        if(Ext.isIE){
             return frame.dom.contentWindow.document;
         } else {
             return (frame.dom.contentDocument || window.frames[id].document);
@@ -171,7 +173,7 @@ Kwf.User.Login.Dialog = Ext2.extend(Ext2.Window,
         } else {
             if (Kwf.menu) Kwf.menu.reload();
             if (this.success) {
-                Ext2.callback(this.success, this.scope);
+                Ext.callback(this.success, this.scope);
             }
         }
     },

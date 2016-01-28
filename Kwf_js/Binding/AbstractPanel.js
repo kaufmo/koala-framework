@@ -1,37 +1,45 @@
-Kwf.Binding.AbstractPanel = function(config) {
-    if (!config || !config.actions) this.actions = {}; //muss hier sein
-    Kwf.Binding.AbstractPanel.superclass.constructor.apply(this, arguments);
-};
-
-Kwf.Binding.AbstractPanel.createFormOrComponentPanel = function(componentConfigs, ec, config, grid)
-{
-    var panel;
-    var componentConfig = componentConfigs[ec.componentClass+'-'+ec.type];
-    if (componentConfig.needsComponentPanel) {
-        panel = new Kwf.Component.ComponentPanel(Ext2.apply({
-            title: componentConfig.title,
-            mainComponentClass: ec.componentClass,
-            mainType: ec.type,
-            mainComponentId: ec.idTemplate + ec.componentIdSuffix,
-            componentConfigs: componentConfigs,
-            mainEditComponents: [ec]
-        }, config));
-        grid.addBinding(panel);
-    } else {
-        panel = Ext2.ComponentMgr.create(Ext2.apply(componentConfig, config));
-        var bindingConfig = { item: panel };
-        if (ec.idTemplate) {
-            bindingConfig.componentId = ec.idTemplate + ec.componentIdSuffix;
-        } else {
-            bindingConfig.componentIdSuffix = ec.idSeparator + '{0}' + ec.componentIdSuffix;
+Ext.define('Kwf.Binding.AbstractPanel', {
+    extend: 'Ext.panel.Panel',
+    requires: [
+        'Ext.util.MixedCollection',
+        'Ext.layout.container.Card',
+        'Ext.window.MessageBox'
+    ],
+    uses: [
+        'Kwf.Component.ComponentPanel'
+    ],
+    constructor: function (config) {
+        if (!config || !config.actions) this.actions = {};
+        this.callParent(arguments);
+    },
+    statics: {
+        createFormOrComponentPanel: function(componentConfigs, ec, config, grid) {
+            var panel;
+            var componentConfig = componentConfigs[ec.componentClass+'-'+ec.type];
+            if (componentConfig.needsComponentPanel) {
+                panel = new Kwf.Component.ComponentPanel(Ext.apply({
+                    title: componentConfig.title,
+                    mainComponentClass: ec.componentClass,
+                    mainType: ec.type,
+                    mainComponentId: ec.idTemplate + ec.componentIdSuffix,
+                    componentConfigs: componentConfigs,
+                    mainEditComponents: [ec]
+                }, config));
+                grid.addBinding(panel);
+            } else {
+                panel = Ext.ComponentMgr.create(Ext.apply(componentConfig, config));
+                var bindingConfig = { item: panel };
+                if (ec.idTemplate) {
+                    bindingConfig.componentId = ec.idTemplate + ec.componentIdSuffix;
+                } else {
+                    bindingConfig.componentIdSuffix = ec.idSeparator + '{0}' + ec.componentIdSuffix;
+                }
+                grid.addBinding(bindingConfig);
+            }
+            return panel;
         }
-        grid.addBinding(bindingConfig);
-    }
-    return panel;
-};
+    },
 
-Ext2.extend(Kwf.Binding.AbstractPanel, Ext2.Panel,
-{
     checkDirty: true,
 
     loadBindingsOnSelectionChange: true, //wenn false muss loadBindings() selbst aufgerufen werden
@@ -39,19 +47,8 @@ Ext2.extend(Kwf.Binding.AbstractPanel, Ext2.Panel,
     initComponent: function() {
         this.activeId = null;
 
-        this.addEvents(
-            /**
-            * @event datachange
-            * Daten wurden geändert, zB um grid neu zu laden
-            * @param {Object} result from server
-            */
-            'datachange',
-            'selectionchange',
-            'beforeselectionchange',
-            'loaded'
-        );
         var binds = this.bindings;
-        this.bindings = new Ext2.util.MixedCollection();
+        this.bindings = new Ext.util.MixedCollection();
         if (binds) {
             this.addBinding.apply(this, binds);
         }
@@ -84,7 +81,7 @@ Ext2.extend(Kwf.Binding.AbstractPanel, Ext2.Panel,
             this.baseParams = {};
         }
 
-        Kwf.Binding.AbstractPanel.superclass.initComponent.call(this);
+        this.callParent(arguments);
     },
 
     /**
@@ -97,7 +94,7 @@ Ext2.extend(Kwf.Binding.AbstractPanel, Ext2.Panel,
             this.activeId = id;
             this.bindings.each(function(b) {
                 b.item.enable();
-                if (b.item.ownerCt && b.item.ownerCt.getLayout && b.item.ownerCt.getLayout() instanceof Ext2.layout.CardLayout) {
+                if (b.item.ownerCt && b.item.ownerCt.getLayout && b.item.ownerCt.getLayout() instanceof Ext.layout.CardLayout) {
                     if (b.item.ownerCt.getLayout().activeItem != b.item) {
                         //dieses binding überspringen, liegt in einem
                         //tab der nicht aktiv ist
@@ -133,6 +130,7 @@ Ext2.extend(Kwf.Binding.AbstractPanel, Ext2.Panel,
         }
         if (!b.item.hasBaseParams(params)) {
             b.item.applyBaseParams(params);
+            console.log('load');
             b.item.load();
         }
     },
@@ -165,13 +163,14 @@ Ext2.extend(Kwf.Binding.AbstractPanel, Ext2.Panel,
                     //die anderen auch neu laden
                     this.bindings.each(function(b) {
                         b.item.enable();
-                        if (b.item.ownerCt && b.item.ownerCt.getLayout && b.item.ownerCt.getLayout() instanceof Ext2.layout.CardLayout) {
+                        if (b.item.ownerCt && b.item.ownerCt.getLayout && b.item.ownerCt.getLayout() instanceof Ext.layout.CardLayout) {
                             if (b.item.ownerCt.getLayout().activeItem != b.item) {
                                 //dieses binding überspringen, liegt in einem
                                 //tab der nicht aktiv ist
                                 return;
                             }
                         }
+                        console.log('datachange');
                         this._loadBinding(b);
                     }, this);
                 } else {
@@ -204,6 +203,7 @@ Ext2.extend(Kwf.Binding.AbstractPanel, Ext2.Panel,
                 this.bindings.each(function(i) {
                     if (i.item == item) {
                         if (!item.disabled) {
+                            console.log('activate');
                             this._loadBinding(i);
                         }
                         return false;
@@ -235,10 +235,10 @@ Ext2.extend(Kwf.Binding.AbstractPanel, Ext2.Panel,
     mabySubmit : function(cb, options)
     {
         if (this.checkDirty && !this.disabled && this.isDirty()) {
-            Ext2.Msg.show({
+            Ext.Msg.show({
             title:trlKwf('Save'),
             msg: trlKwf('Do you want to save the changes?'),
-            buttons: Ext2.Msg.YESNOCANCEL,
+            buttons: Ext.Msg.YESNOCANCEL,
             scope: this,
             fn: function(button) {
                 if (button == 'yes') {
@@ -281,7 +281,7 @@ Ext2.extend(Kwf.Binding.AbstractPanel, Ext2.Panel,
     },
     applyBaseParams : function(baseParams) {
         if (!this.baseParams) { this.baseParams = {}; }
-        Ext2.apply(this.baseParams, baseParams);
+        Ext.apply(this.baseParams, baseParams);
     },
     getBaseParams : function() {
         return this.baseParams || {};

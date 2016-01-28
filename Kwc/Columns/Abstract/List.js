@@ -1,9 +1,9 @@
-Ext2.namespace('Kwc.Columns');
-Kwc.Columns.List = Ext2.extend(Kwc.Abstract.List.List,
-{
+Ext.define('Kwc.Columns.Abstract.List', {
+    extend: 'Kwc.Abstract.List.List',
+    alias: 'widget.kwc.columns.list',
     initComponent: function()
     {
-        Kwc.Columns.List.superclass.initComponent.call(this);
+        this.callParent(arguments);
         var deleteAction = this.grid.getAction('delete');
         deleteAction.disable();
         deleteAction.initialConfig.needsSelection = false;
@@ -18,4 +18,3 @@ Kwc.Columns.List = Ext2.extend(Kwc.Abstract.List.List,
         }, this);
     }
 });
-Ext2.reg('kwc.columns.list', Kwc.Columns.List);

@@ -1,11 +1,13 @@
-Kwf.Form.StaticField = Ext2.extend(Ext2.BoxComponent, {
+Ext.define('Kwf.Form.StaticField', {
+    extend: 'Ext.Component',
+    alias: 'widget.staticfield',
     autoEl: {tag: 'div', cls:'kwf-form-static-field'},
     isFormField : true,
     initComponent: function() {
-        Kwf.Form.StaticField.superclass.initComponent.call(this);
+        this.callParent(arguments);
     },
     afterRender: function() {
-        Kwf.Form.StaticField.superclass.afterRender.call(this);
+        this.callParent(arguments);
         this.el.update(this.text);
     },
     getName: function() {
@@ -18,10 +20,10 @@ Kwf.Form.StaticField = Ext2.extend(Ext2.BoxComponent, {
     reset: function() {},
     setValue: function() {},
     isDirty: function() { return false; },
+    isValid: function() { return true; },
     resetDirty: function() {},
     clearValue: function() {},
     validate: function() { return true; },
     setFormBaseParams: function() { },
     setDefaultValue: function() { }
 });
-Ext2.reg('staticfield', Kwf.Form.StaticField);

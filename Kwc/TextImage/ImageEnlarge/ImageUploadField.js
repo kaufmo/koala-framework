@@ -1,8 +1,11 @@
-Ext2.namespace('Kwc.TextImage.ImageEnlarge');
-Kwc.TextImage.ImageEnlarge.ImageUploadField = Ext2.extend(Kwc.Basic.ImageEnlarge.ImageUploadField, {
-
+Ext.define('Kwc.TextImage.ImageEnlarge.ImageUploadField', {
+    extend: 'Kwc.Basic.ImageEnlarge.ImageUploadField',
+    alias: 'widget.kwc.textimage.imageenlarge.imageuploadfield',
+    uses: [
+        'Kwc.Abstract.Cards.ComboBox'
+    ],
     afterRender: function() {
-        Kwc.TextImage.ImageEnlarge.ImageUploadField.superclass.afterRender.call(this);
+        this.callParent(arguments);
         var actionField = this._findActionCombobox();
         actionField.on('changevalue', function (combo, value, index) {
             this._checkForImageTooSmall();
@@ -15,7 +18,7 @@ Kwc.TextImage.ImageEnlarge.ImageUploadField = Ext2.extend(Kwc.Basic.ImageEnlarge
                 return true;
             }
             return false;
-        }, this).findBy(function (component, container) {
+        }, this).queryBy(function (component, container) {
             if (component instanceof Kwc.Abstract.Cards.ComboBox) {
                 return true;
             }
@@ -34,5 +37,3 @@ Kwc.TextImage.ImageEnlarge.ImageUploadField = Ext2.extend(Kwc.Basic.ImageEnlarge
         return action == 'enlarge';
     }
 });
-
-Ext2.reg('kwc.textimage.imageenlarge.imageuploadfield', Kwc.TextImage.ImageEnlarge.ImageUploadField);

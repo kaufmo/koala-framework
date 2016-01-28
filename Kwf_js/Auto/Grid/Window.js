@@ -1,13 +1,17 @@
-Ext2.namespace('Kwf.Auto.Grid');
-
-Kwf.Auto.Grid.Window = Ext2.extend(Ext2.Window, {
+Ext.define('Kwf.Auto.Grid.Window', {
+    extend: 'Ext.window.Window',
+    alias: 'widget.kwf.autogridwindow',
+    requires: [
+        'Kwf.Auto.GridPanel',
+        'Ext.Action'
+    ],
     layout: 'fit',
     modal: true,
     closeAction: 'hide',
     queryParam: 'id',
     initComponent : function()
     {
-        var cfg = Ext2.apply({
+        var cfg = Ext.apply({
             controllerUrl: this.controllerUrl,
             autoLoad: false,
             baseParams: this.baseParams
@@ -15,7 +19,7 @@ Kwf.Auto.Grid.Window = Ext2.extend(Ext2.Window, {
         this.autoGrid = new Kwf.Auto.GridPanel(cfg);
         this.items = [this.autoGrid];
 
-        Kwf.Auto.Grid.Window.superclass.initComponent.call(this);
+        this.callParent(arguments);
     },
 
     showEdit: function(id, record) {
@@ -45,5 +49,3 @@ Kwf.Auto.Grid.Window = Ext2.extend(Ext2.Window, {
         this.getAutoGrid().applyBaseParams(p);
     }
 });
-
-Ext2.reg('kwf.autogridwindow', Kwf.Auto.Grid.Window);

@@ -1,5 +1,76 @@
-Ext2.namespace('Kwc.Abstract.Image');
-Kwc.Abstract.Image.DimensionField = Ext2.extend(Ext2.form.Field, {
+Ext.define('Kwc.Abstract.Image.DimensionField', {
+    extend: 'Ext.form.field.Base',
+    alias: 'widget.kwc.image.dimensionfield',
+    requires: [
+        'Ext.button.Button',
+        'Kwc.Abstract.Image.DimensionWindow'
+    ],
+    statics: {
+        isValidImageSize: function(value, dimensions, scaleFactor, dpr2) {
+            if (!value.cropData)
+                return true;
+            var dimension = dimensions[value.dimension];
+            var width =  dimension.width == 'user' ? value.width : dimension.width;
+            var height = dimension.height == 'user' ? value.height : dimension.height;
+            var dprFactor = 1;
+            if (dpr2) {
+                dprFactor = 2;
+            }
+            if (width * dprFactor > value.cropData.width * scaleFactor
+                || height * dprFactor > value.cropData.height * scaleFactor) {
+                return false;
+            }
+            return true;
+        },
+        getDimensionPixelString: function(dimension, v, dpr2) {
+            var dprFactor = 1;
+            if (dpr2) dprFactor = 2;
+            var width = null;
+            if (!isNaN(parseInt(dimension.width))) {
+                width = dimension.width;
+            } else if (dimension.width == 'user' && v) {
+                width = v.width;
+            }
+            var height = null;
+            if (!isNaN(parseInt(dimension.height))) {
+                height = dimension.height;
+            } else if (dimension.height == 'user' && v) {
+                height = v.height;
+            }
+            height *= dprFactor;
+            width *= dprFactor;
+            var ret = '';
+            if (height && width) {
+                ret = width + 'x' + height+'px';
+            } else if (height) {
+                ret = trlKwf('{0}px high', height);
+            } else if (width) {
+                ret = trlKwf('{0}px wide', width);
+            }
+            return ret;
+        },
+        getDimensionString: function(dimension, v, dpr2) {
+            var ret;
+            if (!dimension) return;
+
+            if (dimension.text) {
+                ret = dimension.text;
+            } else {
+                ret = '';
+            }
+
+            var pixelString = Kwc.Abstract.Image.DimensionField.getDimensionPixelString(dimension, v, dpr2);
+            if (ret) {
+                if (pixelString) {
+                    ret += ' ('+pixelString+')';
+                }
+            } else {
+                ret = pixelString;
+            }
+            if (!ret) ret = '&nbsp;';
+            return ret;
+        }
+    },
     _scaleFactor: null,
     resolvedDimensions: null,
 
@@ -32,9 +103,9 @@ Kwc.Abstract.Image.DimensionField = Ext2.extend(Ext2.form.Field, {
                 pixelString = Kwc.Abstract.Image.DimensionField.getDimensionPixelString(this.resolvedDimensions[v.dimension], v, this.dpr2Check);
             }
             if (pixelString) {
-                this.getEl().child('.kwc-abstract-image-dimension-name').update(trlKwf('At least: ')+pixelString);
+                this.getEl().down('.kwc-abstract-image-dimension-name').update(trlKwf('At least: ')+pixelString);
             } else {
-                this.getEl().child('.kwc-abstract-image-dimension-name').update('&nbsp;');
+                this.getEl().down('.kwc-abstract-image-dimension-name').update('&nbsp;');
             }
         }
         this.fireEvent('change', this.value);
@@ -42,14 +113,14 @@ Kwc.Abstract.Image.DimensionField = Ext2.extend(Ext2.form.Field, {
 
     initComponent: function() {
         this.resolvedDimensions = Kwf.clone(this.dimensions);
-        Kwc.Abstract.Image.DimensionField.superclass.initComponent.call(this);
+        this.callParent(arguments);
     },
 
     afterRender: function() {
-        Kwc.Abstract.Image.DimensionField.superclass.afterRender.call(this);
-        this._cropButton = new Ext2.Button({
+        this.callParent(arguments);
+        this._cropButton = new Ext.Button({
             text: trlKwf('Edit'),
-            cls: 'x2-btn-text-icon kwc-abstract-image-dimension-cropbutton',
+            cls: 'x-btn-text-icon kwc-abstract-image-dimension-cropbutton',
             icon: '/assets/silkicons/shape_handles.png',
             renderTo: this.getEl(),
             scope: this,
@@ -119,75 +190,3 @@ Kwc.Abstract.Image.DimensionField = Ext2.extend(Ext2.form.Field, {
     }
 });
 
-Kwc.Abstract.Image.DimensionField.isValidImageSize = function(value, dimensions, scaleFactor, dpr2)
-{
-    if (!value.cropData)
-        return true;
-    var dimension = dimensions[value.dimension];
-    var width =  dimension.width == 'user' ? value.width : dimension.width;
-    var height = dimension.height == 'user' ? value.height : dimension.height;
-    var dprFactor = 1;
-    if (dpr2) {
-        dprFactor = 2;
-    }
-    if (width * dprFactor > value.cropData.width * scaleFactor
-        || height * dprFactor > value.cropData.height * scaleFactor) {
-        return false;
-    }
-    return true;
-};
-
-Kwc.Abstract.Image.DimensionField.getDimensionPixelString = function(dimension, v, dpr2)
-{
-    var dprFactor = 1;
-    if (dpr2) dprFactor = 2;
-    var width = null;
-    if (!isNaN(parseInt(dimension.width))) {
-        width = dimension.width;
-    } else if (dimension.width == 'user' && v) {
-        width = v.width;
-    }
-    var height = null;
-    if (!isNaN(parseInt(dimension.height))) {
-        height = dimension.height;
-    } else if (dimension.height == 'user' && v) {
-        height = v.height;
-    }
-    height *= dprFactor;
-    width *= dprFactor;
-    var ret = '';
-    if (height && width) {
-        ret = width + 'x' + height+'px';
-    } else if (height) {
-        ret = trlKwf('{0}px high', height);
-    } else if (width) {
-        ret = trlKwf('{0}px wide', width);
-    }
-    return ret;
-};
-
-Kwc.Abstract.Image.DimensionField.getDimensionString = function(dimension, v, dpr2)
-{
-    var ret;
-    if (!dimension) return;
-
-    if (dimension.text) {
-        ret = dimension.text;
-    } else {
-        ret = '';
-    }
-
-    var pixelString = Kwc.Abstract.Image.DimensionField.getDimensionPixelString(dimension, v, dpr2);
-    if (ret) {
-        if (pixelString) {
-            ret += ' ('+pixelString+')';
-        }
-    } else {
-        ret = pixelString;
-    }
-    if (!ret) ret = '&nbsp;';
-    return ret;
-};
-
-
-Ext2.reg('kwc.image.dimensionfield', Kwc.Abstract.Image.DimensionField);

@@ -1,12 +1,24 @@
-Kwf.Form.MultiFields = Ext2.extend(Ext2.Panel, {
+Ext.define('Kwf.Form.MultiFields', {
+    extend: 'Ext.panel.Panel',
+    alias: 'widget.multifields',
+    requires: [
+        'Kwf.Form.MultiFields.AddButton',
+        'Kwf.Form.MultiFields.DeleteButton',
+        'Kwf.Form.MultiFields.DownButton',
+        'Kwf.Form.MultiFields.Hidden',
+        'Kwf.Form.MultiFields.UpButton'
+    ],
+    uses: [
+        'Kwf.Auto.FormPanel'
+    ],
     minEntries: 1,
     position: true,
     allowAdd: true,
     allowDelete: true,
     initComponent : function() {
-        Kwf.Form.MultiFields.superclass.initComponent.call(this);
+        this.callParent(arguments);
 
-        this.hiddenCountValue = new Kwf.Form.MultiFieldsHidden({
+        this.hiddenCountValue = new Kwf.Form.MultiFields.Hidden({
             name: this.name,
             multiFieldsPanel: this
         });
@@ -16,14 +28,14 @@ Kwf.Form.MultiFields = Ext2.extend(Ext2.Panel, {
     },
 
     enableRecursive: function() {
-        Kwf.Form.MultiFields.superclass.enableRecursive.call(this);
+        this.callParent(arguments);
         this.groups.each(function(g) {
             g.item.enableRecursive();
         });
     },
 
     disableRecursive: function() {
-        Kwf.Form.MultiFields.superclass.disableRecursive.call(this);
+        this.callParent(arguments);
         this.groups.each(function(g) {
             g.item.disableRecursive();
         });
@@ -31,11 +43,11 @@ Kwf.Form.MultiFields = Ext2.extend(Ext2.Panel, {
 
     // private
     onRender : function(ct, position){
-        Kwf.Form.MultiFields.superclass.onRender.call(this, ct, position);
+        this.callParent(arguments);
 
         if (!this.maxEntries || !this.minEntries || this.maxEntries != this.minEntries) {
             if (this.allowAdd) {
-                this.addGroupButton = new Kwf.Form.MultiFieldsAddButton({
+                this.addGroupButton = new Kwf.Form.MultiFields.AddButton({
                     multiFieldsPanel: this,
                     renderTo: this.body
                 }, position);
@@ -53,17 +65,17 @@ Kwf.Form.MultiFields = Ext2.extend(Ext2.Panel, {
         var items = [];
         if (!this.maxEntries || !this.minEntries || this.maxEntries != this.minEntries) {
             if (this.allowDelete) {
-                var deleteButton = new Kwf.Form.MultiFieldsDeleteButton({
+                var deleteButton = new Kwf.Form.MultiFields.DeleteButton({
                     multiFieldsPanel: this
                 });
                 items.push(deleteButton);
             }
             if (this.position) {
-                var upButton = new Kwf.Form.MultiFieldsUpButton({
+                var upButton = new Kwf.Form.MultiFields.UpButton({
                     multiFieldsPanel: this
                 });
                 items.push(upButton);
-                var downButton = new Kwf.Form.MultiFieldsDownButton({
+                var downButton = new Kwf.Form.MultiFields.DownButton({
                     multiFieldsPanel: this
                 });
                 items.push(downButton);
@@ -82,7 +94,7 @@ Kwf.Form.MultiFields = Ext2.extend(Ext2.Panel, {
         if (deleteButton) deleteButton.groupItem = item;
         if (upButton) upButton.groupItem = item;
         if (downButton) downButton.groupItem = item;
-        this.doLayout();
+        this.updateLayout();
 
         item.cascade(function(i) {
             if (i.title && i.title.match(/\{(\w+)\}/)) {
@@ -184,264 +196,5 @@ Kwf.Form.MultiFields = Ext2.extend(Ext2.Panel, {
                 }
             }, this);
         }
-    }
-});
-Ext2.reg('multifields', Kwf.Form.MultiFields);
-
-Kwf.Form.MultiFieldsDeleteButton = Ext2.extend(Ext2.BoxComponent,  {
-    // private
-    onRender : function(ct, position){
-        this.el = ct.createChild({
-            tag: 'a',
-            html: '<img src="/assets/silkicons/delete.png" />',
-            href: '#',
-            style: 'float: right; position: relative; z-index: 10; left: -20px; top: 1px;'
-        }, position);
-        this.el.on('click', function(e) {
-            e.stopEvent();
-            if (this.disabled) return;
-            var p = this.multiFieldsPanel;
-            for(var i=0; i < p.groups.length; i++) {
-                var g = p.groups[i];
-                if (g.item == this.groupItem) {
-                    p.remove(g.item);
-                    p.groups.splice(i, 1);
-                    p.doLayout();
-                    break;
-                }
-            }
-            //workaround für Firefox problem wenn eintrag gelöscht wird verschwindet add-Button
-            if(p.addGroupButton) p.addGroupButton.hide();
-            if(p.addGroupButton) p.addGroupButton.show.defer(1, p.addGroupButton);
-            if(p.addGroupButton) p.updateButtonsState();
-        }, this);
-    }
-});
-Kwf.Form.MultiFieldsUpButton = Ext2.extend(Ext2.BoxComponent,  {
-    // private
-    onRender : function(ct, position){
-        this.el = ct.createChild({
-            tag: 'a',
-            html: '<img src="/assets/silkicons/arrow_up.png" />',
-            href: '#',
-            style: 'float: right; position: relative; z-index: 10; left: -20px; top: 1px;'
-        }, position);
-        this.el.on('click', function(e) {
-            e.stopEvent();
-            if (this.disabled) return;
-            var p = this.multiFieldsPanel;
-            for(var i=0; i < p.groups.length; i++) {
-                var g = p.groups[i];
-                if (g.item == this.groupItem) {
-                    g.item.getEl().insertBefore(p.groups[i-1].item.getEl());
-                    p.groups.splice(i-1, 2, p.groups[i], p.groups[i-1]);
-                    //wenn reihenfolge geaendert wurde muss feld dirty sein
-                    //einfach die anzahl faken
-                    p.hiddenCountValue.originalCount = -1;
-                    break;
-                }
-            }
-            p.updateButtonsState();
-        }, this);
-    }
-});
-Kwf.Form.MultiFieldsDownButton = Ext2.extend(Ext2.BoxComponent,  {
-    // private
-    onRender : function(ct, position){
-        this.el = ct.createChild({
-            tag: 'a',
-            html: '<img src="/assets/silkicons/arrow_down.png" />',
-            href: '#',
-            style: 'float: right; position: relative; z-index: 10; left: -20px; top: 1px;'
-        }, position);
-        this.el.on('click', function(e) {
-            e.stopEvent();
-            if (this.disabled) return;
-            var p = this.multiFieldsPanel;
-            for(var i=0; i < p.groups.length; i++) {
-                var g = p.groups[i];
-                if (g.item == this.groupItem) {
-                    if (!p.groups[i+2] && p.addGroupButton) {
-                        g.item.getEl().insertBefore(p.addGroupButton.getEl());
-                    } else {
-                        g.item.getEl().insertBefore(p.groups[i+2].item.getEl());
-                    }
-                    p.groups.splice(i, 2, p.groups[i+1], p.groups[i]);
-                    //wenn reihenfolge geaendert wurde muss feld dirty sein
-                    //einfach die anzahl faken
-                    p.hiddenCountValue.originalCount = -1;
-                    break;
-                }
-            }
-            p.updateButtonsState();
-        }, this);
-    }
-});
-Kwf.Form.MultiFieldsAddButton = Ext2.extend(Ext2.BoxComponent,  {
-    // private
-    onRender : function(ct, position){
-        this.el = ct.createChild({
-            tag: 'a',
-            html: '<img src="/assets/silkicons/add.png" />',
-            href: '#',
-            style: 'float: right; position: relative; z-index: 10; left: -20px; top: 1px;'
-        }, position);
-        this.el.on('click', function(e) {
-            e.stopEvent();
-            if (this.disabled) return false;
-            var item = this.multiFieldsPanel.addGroup();
-            var breakIt = false;
-            item.cascade(function(i) {
-                if (!breakIt && i.isFormField && i.isVisible()) {
-                    i.focus();
-                    //return false funktioniert nicht, workaround:
-                    breakIt = true;
-                }
-            }, this);
-        }, this);
-    }
-});
-
-Kwf.Form.MultiFieldsHidden = Ext2.extend(Ext2.form.Hidden, {
-    _initFields: function(cnt) {
-        var gp = this.multiFieldsPanel;
-        if (cnt < gp.minEntries) cnt = gp.minEntries;
-        if (cnt > gp.maxEntries) cnt = gp.maxEntries;
-        for (var i = gp.groups.length; i < cnt; i++) {
-            gp.addGroup();
-        }
-        for (var i = gp.groups.length; i > cnt; i--) {
-            var g = gp.groups[i-1];
-            gp.remove(g.item);
-            gp.remove(g.deleteButton);
-            gp.remove(g.upButton);
-            gp.remove(g.downButton);
-            gp.groups.splice(i-1, 1);
-        }
-    },
-    setValue : function(value) {
-        var gp = this.multiFieldsPanel;
-        if (!value instanceof Array) throw new 'ohje, value ist kein array - wos mochma do?';
-        this._initFields(value.length);
-        for (var i = 0; i < gp.groups.length; i++) {
-            if (value[i]) {
-                gp.groups[i].id = value[i].id;
-            } else {
-                gp.groups[i].id = null;
-            }
-            this._findFormFields(gp.groups[i].item, function(item) {
-                if (value[i]) {
-                    for (var j in value[i]) {
-                        if (item.name == j) {
-                            item.setValue(value[i][j]);
-                            return;
-                        }
-                    }
-                }
-            });
-        }
-        gp.updateButtonsState(value);
-
-        this.value = value;
-    },
-    getValue : function() {
-        var ret = [];
-        var gp = this.multiFieldsPanel;
-        for (var i = 0; i < gp.groups.length; i++) {
-            var g = gp.groups[i];
-            var row = {};
-            row.id = g.id;
-            this._findFormFields(g.item, function(item) {
-                row[item.name] = item.getValue();
-            });
-            ret.push(row);
-        }
-        return ret;
-    },
-    _findFormFields: function(item, fn, scope) {
-        if (item.isFormField) {
-            fn.call(scope || this, item);
-        }
-        if (item.items) {
-            item.items.each(function(i) {
-                return this._findFormFields(i, fn, scope);
-            }, this);
-        }
-    },
-    validate : function() {
-        var valid = true;
-        var gp = this.multiFieldsPanel;
-        gp.groups.each(function(g) {
-            this._findFormFields(g.item, function(f) {
-                if (!f.validate()) {
-                    valid = false;
-                }
-            }, this);
-        }, this);
-        return valid;
-    },
-    resetDirty: function() {
-        var gp = this.multiFieldsPanel;
-        gp.groups.each(function(g) {
-            this._findFormFields(g.item, function(f) {
-                f.resetDirty();
-            }, this);
-        }, this);
-        this.originalCount = gp.groups.length;
-        this.originalValue = this.value;
-    },
-    clearValue: function() {
-        Kwf.Form.MultiFieldsHidden.superclass.resetDirty.call(this);
-        var gp = this.multiFieldsPanel;
-        this._initFields(gp.minEntries);
-        gp.groups.each(function(g) {
-            this._findFormFields(g.item, function(f) {
-                f.clearValue();
-            }, this);
-        }, this);
-        this.originalCount = gp.groups.length;
-        this.originalValue = '';
-    },
-    setDefaultValue: function() {
-        var gp = this.multiFieldsPanel;
-        this._initFields(gp.minEntries);
-        gp.groups.each(function(g) {
-            this._findFormFields(g.item, function(f) {
-                f.setDefaultValue();
-            }, this);
-        }, this);
-        this.originalCount = gp.groups.length;
-        this.originalValue = '';
-    },
-    isDirty : function() {
-        var gp = this.multiFieldsPanel;
-
-        //anz. einträge geändert (felder selbst müssen nicht dirty sein)
-        if (this.originalCount != gp.groups.length) return true;
-
-        var dirty = false;
-        gp.groups.each(function(g) {
-            this._findFormFields(g.item, function(f) {
-                if (f.isDirty()) {
-                    dirty = true;
-                    return false; //each verlassen
-                }
-            }, this);
-        }, this);
-        return dirty;
-    },
-
-    // private
-    initEvents : function(){
-        this.originalValue = '';
-    },
-
-    clearInvalid: function() {
-        var gp = this.multiFieldsPanel;
-        gp.groups.each(function(g) {
-            this._findFormFields(g.item, function(f) {
-                f.clearInvalid();
-            }, this);
-        }, this);
     }
 });

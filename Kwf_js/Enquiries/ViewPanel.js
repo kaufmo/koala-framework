@@ -1,13 +1,12 @@
-
-Kwf.Enquiries.ViewPanel = Ext2.extend(Kwf.Binding.AbstractPanel,
-{
+Ext.define('Kwf.Enquiries.ViewPanel', {
+    extend: 'Kwf.Binding.AbstractPanel',
     initComponent: function()
     {
-        Kwf.Enquiries.ViewPanel.superclass.initComponent.call(this);
+        this.callParent(arguments);
     },
 
     load: function(params, options) {
-        this.getUpdater().update({
+        this.getLoader().load({
             url: this.controllerUrl+'/get-enquiry',
             params: { id: this.getBaseParams().id }
         });

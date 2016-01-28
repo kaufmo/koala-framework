@@ -1,12 +1,11 @@
-Ext2.ns('Kwf.Auto.Filter');
-Kwf.Auto.Filter.Abstract = function(config) {
-    Kwf.Auto.Filter.Abstract.superclass.constructor.call(this);
-    this.addEvents('filter');
-    this.toolbarItems = [];
-    this.id = config.name;
-    this.label = config.label || null;
-};
-Ext2.extend(Kwf.Auto.Filter.Abstract, Ext2.util.Observable, {
+Ext.define('Kwf.Auto.Filter.Abstract', {
+    extend: 'Ext.mixin.Observable',
+    constructor: function(config) {
+        this.callParent(arguments);
+        this.toolbarItems = [];
+        this.id = config.name;
+        this.label = config.label || null;
+    },
     reset: function() {
     },
     getParams: function() {

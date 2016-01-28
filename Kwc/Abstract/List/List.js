@@ -1,6 +1,15 @@
-Ext2.namespace('Kwc.Abstract.List');
-Kwc.Abstract.List.List = Ext2.extend(Kwf.Binding.ProxyPanel,
-{
+Ext.define('Kwc.Abstract.List.List', {
+    extend: 'Kwf.Binding.ProxyPanel',
+    alias: 'widget.kwc.list.list',
+    requires: [
+        'Ext.Action',
+        'Kwf.Auto.GridPanel',
+        'Ext.tab.Panel',
+        'Kwf.Utils.MultiFileUploadPanel'
+    ],
+    uses: [
+        'Kwf.Binding.AbstractPanel'
+    ],
     listWidth: 300,
     showCopyPaste: true,
 
@@ -8,7 +17,7 @@ Kwc.Abstract.List.List = Ext2.extend(Kwf.Binding.ProxyPanel,
     {
         this.layout = 'border';
 
-        this.actions.copy = new Ext2.Action({
+        this.actions.copy = new Ext.Action({
             text    : trlKwf('Copy'),
             icon: '/assets/silkicons/page_white_copy.png',
             //cls     : 'x2-btn-text-icon',
@@ -16,7 +25,7 @@ Kwc.Abstract.List.List = Ext2.extend(Kwf.Binding.ProxyPanel,
             disabled: true,
             scope   : this
         });
-        this.actions.paste = new Ext2.Action({
+        this.actions.paste = new Ext.Action({
             text    : trlKwf('Paste'),
             icon: '/assets/silkicons/page_white_copy.png',
             //cls     : 'x2-btn-text-icon',
@@ -27,20 +36,19 @@ Kwc.Abstract.List.List = Ext2.extend(Kwf.Binding.ProxyPanel,
         var gridConfig = {
             controllerUrl: this.controllerUrl,
             region: 'center',
-            split: true,
             baseParams: this.baseParams, //Kompatibilität zu ComponentPanel
             autoLoad: this.autoLoad,
             listeners: {
                 beforerendergrid: function(grid) {
-                    var tb = grid.getTopToolbar();
+                    var tb = grid.getDockedItems('toolbar[dock="top"]')[0];
                     if (tb && this.showCopyPaste) {
                         tb.add({
-                            cls: 'x2-btn-icon',
+                            cls: 'x-btn-icon',
                             icon: '/assets/silkicons/page_white_copy.png',
                             menu: [
-                                   this.actions.copy,
-                                   this.actions.paste
-                                   ]
+                               this.actions.copy,
+                               this.actions.paste
+                            ]
                         });
                     }
                 },
@@ -55,7 +63,7 @@ Kwc.Abstract.List.List = Ext2.extend(Kwf.Binding.ProxyPanel,
             }
         };
         if (this.useInsertAdd) {
-            gridConfig.onAdd = this.onAdd.createDelegate(this); // wg. Scope
+            gridConfig.onAddClick = this.onAddClick.createDelegate(this); // wg. Scope
         }
 
         this.grid = new Kwf.Auto.GridPanel(gridConfig);
@@ -74,7 +82,7 @@ Kwc.Abstract.List.List = Ext2.extend(Kwf.Binding.ProxyPanel,
         } else {
             this.editForms.each(function(ef) {
                 ef.baseParams = Kwf.clone(this.getBaseParams());
-                var panel = Ext2.ComponentMgr.create(ef);
+                var panel = Ext.ComponentMgr.create(ef);
                 this.grid.addBinding(panel);
                 this.editPanels.push(panel);
             }, this);
@@ -83,7 +91,7 @@ Kwc.Abstract.List.List = Ext2.extend(Kwf.Binding.ProxyPanel,
                     this.componentConfigs, ec, {}, this.grid
                 ));
             }, this);
-            this.childPanel = new Ext2.TabPanel({
+            this.childPanel = new Ext.TabPanel({
                 region: 'center',
                 activeTab: 0,
                 items: this.editPanels
@@ -93,7 +101,7 @@ Kwc.Abstract.List.List = Ext2.extend(Kwf.Binding.ProxyPanel,
         // MultiFileUpload hinzufügen falls konfiguriert
         var westItems = [this.grid];
         if (this.multiFileUpload) {
-            this.multiFileUploadPanel = new Kwf.Utils.MultiFileUploadPanel(Ext2.applyIf({
+            this.multiFileUploadPanel = new Kwf.Utils.MultiFileUploadPanel(Ext.applyIf({
                 border: false,
                 region: 'south',
                 height: 50,
@@ -116,9 +124,10 @@ Kwc.Abstract.List.List = Ext2.extend(Kwf.Binding.ProxyPanel,
             }, this);
         }
 
-        this.westPanel = new Ext2.Panel({
+        this.westPanel = new Ext.Panel({
             layout: 'border',
             region: 'west',
+            split: true,
             width: this.listWidth,
             border: false,
             items: westItems,
@@ -127,7 +136,7 @@ Kwc.Abstract.List.List = Ext2.extend(Kwf.Binding.ProxyPanel,
         });
 
         this.items = [this.westPanel, this.childPanel];
-        Kwc.Abstract.List.List.superclass.initComponent.call(this);
+        this.callParent(arguments);
     },
 
     load: function()
@@ -149,9 +158,9 @@ Kwc.Abstract.List.List = Ext2.extend(Kwf.Binding.ProxyPanel,
         }, this);
     },
 
-    onAdd : function()
+    onAddClick : function()
     {
-        Ext2.Ajax.request({
+        Ext.Ajax.request({
             mask: true,
             url: this.controllerUrl + '/json-insert',
             params: this.getBaseParams(),
@@ -159,7 +168,7 @@ Kwc.Abstract.List.List = Ext2.extend(Kwf.Binding.ProxyPanel,
                 this.grid.getSelectionModel().clearSelections();
                 this.reload({
                     callback: function(o, r, s) {
-                        this.grid.getSelectionModel().selectLastRow();
+                        this.grid.getSelectionModel().select(this.grid.store.getCount() - 1);
                         if (this.childPanel.setActiveTab) {
                             this.childPanel.setActiveTab(0);
                         }
@@ -175,20 +184,20 @@ Kwc.Abstract.List.List = Ext2.extend(Kwf.Binding.ProxyPanel,
         if (this.multiFileUploadPanel) {
             this.multiFileUploadPanel.applyBaseParams(baseParams);
         }
-        return Kwc.Abstract.List.List.superclass.applyBaseParams.apply(this, arguments);
+        return this.callParent(arguments);
     },
     setBaseParams : function(baseParams) {
         if (this.multiFileUploadPanel) {
             this.multiFileUploadPanel.setBaseParams(baseParams);
         }
-        return Kwc.Abstract.List.List.superclass.setBaseParams.apply(this, arguments);
+        return this.callParent(arguments);
     },
 
     onCopy: function()
     {
         var params = Kwf.clone(this.getBaseParams());
         params.id = this.grid.getSelectedId();
-        Ext2.Ajax.request({
+        Ext.Ajax.request({
             url: this.controllerUrl+'/json-copy',
             params: params,
             mask: this.el
@@ -196,7 +205,7 @@ Kwc.Abstract.List.List = Ext2.extend(Kwf.Binding.ProxyPanel,
     },
     onPaste: function()
     {
-        Ext2.Ajax.request({
+        Ext.Ajax.request({
             url: this.controllerUrl+'/json-paste',
             params: this.getBaseParams(),
             mask: this.el,
@@ -206,7 +215,7 @@ Kwc.Abstract.List.List = Ext2.extend(Kwf.Binding.ProxyPanel,
                 this.grid.getSelectionModel().clearSelections();
                 this.reload({
                     callback: function(o, r, s) {
-                        this.grid.getSelectionModel().selectLastRow();
+                        this.grid.getSelectionModel().select(this.grid.store.getCount() - 1);
                         if (this.childPanel.setActiveTab) {
                             this.childPanel.setActiveTab(0);
                         }
@@ -217,4 +226,3 @@ Kwc.Abstract.List.List = Ext2.extend(Kwf.Binding.ProxyPanel,
         });
     }
 });
-Ext2.reg('kwc.list.list', Kwc.Abstract.List.List);

@@ -32,7 +32,8 @@ class Kwf_Controller_Action_Redirects_RedirectController extends Kwf_Controller_
                 ->setAllowBlank(false);
         }
 
-        $fs = $this->_form->add(new Kwf_Form_Container_FieldSet(trlKwf('Source')));
+        $fs = $this->_form->add(new Kwf_Form_Container_FieldSet(trlKwf('Source')))
+            ->setWidth(500);
         $fs->add(new Kwf_Form_Field_Select('type', trlKwf('Type')))
             ->setWidth(150)
             ->setValues(array(

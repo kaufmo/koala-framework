@@ -1,7 +1,11 @@
-Kwf.Form.HtmlEditor.UndoRedo = Ext2.extend(Ext2.util.Observable, {
+Ext.define('Kwf.Form.HtmlEditor.UndoRedo', {
+    extend: 'Ext.mixin.Observable',
+    requires: [
+        'Ext.button.Button'
+    ],
     init: function(cmp){
         this.cmp = cmp;
-        this.cmp.afterMethod('createToolbar', this.afterCreateToolbar, this);
+        this.cmp.on('afterRender', this.afterCreateToolbar, this);
         this.cmp.on('initialize', this.onInit, this, {delay:100, single: true});
         this.cmp.afterMethod('updateToolbar', this.updateToolbar, this);
     },
@@ -15,7 +19,7 @@ Kwf.Form.HtmlEditor.UndoRedo = Ext2.extend(Ext2.util.Observable, {
         this.redoAction.setDisabled(!this.cmp.tinymceEditor.undoManager.hasRedo());
     },
     afterCreateToolbar: function() {
-        this.undoAction = new Ext2.Action({
+        this.undoAction = new Ext.Button({
             handler: function() {
                 this.cmp.tinymceEditor.undoManager.undo();
             },
@@ -23,15 +27,15 @@ Kwf.Form.HtmlEditor.UndoRedo = Ext2.extend(Ext2.util.Observable, {
             disabled: true,
             icon: '/assets/silkicons/arrow_undo.png',
             tooltip: {
-                cls: 'x2-html-editor-tip',
+                cls: 'x-html-editor-tip',
                 title: trlKwf('Undo (Ctrl+Z)'),
                 text: trlKwf('Undo the last action.')
             },
-            cls: 'x2-btn-icon',
+            cls: 'x-btn-icon',
             clickEvent: 'mousedown',
             tabIndex: -1
         });
-        this.redoAction = new Ext2.Action({
+        this.redoAction = new Ext.Button({
             handler: function() {
                 this.cmp.tinymceEditor.undoManager.redo();
             },
@@ -39,11 +43,11 @@ Kwf.Form.HtmlEditor.UndoRedo = Ext2.extend(Ext2.util.Observable, {
             disabled: true,
             icon: '/assets/silkicons/arrow_redo.png',
             tooltip: {
-                cls: 'x2-html-editor-tip',
+                cls: 'x-html-editor-tip',
                 title: trlKwf('Redo'),
                 text: trlKwf('Redo the last action.')
             },
-            cls: 'x2-btn-icon',
+            cls: 'x-btn-icon',
             clickEvent: 'mousedown',
             tabIndex: -1
         });

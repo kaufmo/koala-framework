@@ -1,10 +1,15 @@
-Kwf.Binding.TabPanel = Ext2.extend(Kwf.Binding.AbstractPanel,
-{
+Ext.define('Kwf.Binding.TabPanel', {
+    extend: 'Kwf.Binding.AbstractPanel',
+    requires: [
+        'Ext.tab.Panel',
+        'Kwf.Component.ComponentPanel'
+    ],
+    alias: 'kwf.tabpanel',
     layout: 'fit',
     initComponent : function()
     {
         if (!this.tabPanelSettings) this.tabPanelSettings = {};
-        this.tabPanel = new Ext2.TabPanel(Ext2.applyIf(this.tabPanelSettings, {
+        this.tabPanel = new Ext.TabPanel(Ext.applyIf(this.tabPanelSettings, {
             deferredRender: false,
             activeTab: this.activeTab || 0,
             enableTabScroll: this.enableTabScroll || false
@@ -42,7 +47,7 @@ Kwf.Binding.TabPanel = Ext2.extend(Kwf.Binding.AbstractPanel,
                     baseParams  : b
                 });
             } else {
-                var item = Ext2.ComponentMgr.create(Ext2.applyIf(tab, {
+                var item = Ext.ComponentMgr.create(Ext.applyIf(tab, {
                     autoScroll  : true,
                     closable    : false,
                     title       : i,
@@ -68,7 +73,7 @@ Kwf.Binding.TabPanel = Ext2.extend(Kwf.Binding.AbstractPanel,
         }, this);
 
         this.items = this.tabPanel;
-        Kwf.Binding.TabPanel.superclass.initComponent.call(this);
+        this.callParent(arguments);
 
     },
 
@@ -110,13 +115,13 @@ Kwf.Binding.TabPanel = Ext2.extend(Kwf.Binding.AbstractPanel,
         }, this);
     },
     disable: function() {
-        Kwf.Binding.TabPanel.superclass.disable.call(this);
+        this.callParent(arguments);
         this.tabItems.each(function(i) {
             i.disable();
         }, this);
     },
     enable: function() {
-        Kwf.Binding.TabPanel.superclass.enable.call(this);
+        this.callParent(arguments);
         this.tabItems.each(function(i) {
             i.enable();
         }, this);
@@ -175,4 +180,3 @@ Kwf.Binding.TabPanel = Ext2.extend(Kwf.Binding.AbstractPanel,
         return this.tabItems[0].getAutoLoad.apply(this.proxyItem, arguments);
     }
 });
-Ext2.reg('kwf.tabpanel', Kwf.Binding.TabPanel);

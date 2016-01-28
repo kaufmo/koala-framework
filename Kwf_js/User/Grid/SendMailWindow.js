@@ -1,8 +1,15 @@
-Kwf.User.Grid.SendMailWindow = Ext2.extend(Ext2.Window,
-{
+Ext.define('Kwf.User.Grid.SendMailWindow', {
+    extend: 'Ext.window.Window',
+    requires: [
+        'Ext.form.Panel',
+        'Ext.form.FieldSet',
+        'Ext.form.field.Radio',
+        'Ext.button.Button',
+        'Ext.form.field.TextArea'
+    ],
     modal: true,
     initComponent: function() {
-        this.formPanel = new Ext2.FormPanel({
+        this.formPanel = new Ext.FormPanel({
             labelWidth: 90,
             url: this.controllerUrl+'/json-resend-mail',
             baseParams: this.baseParams,
@@ -48,13 +55,13 @@ Kwf.User.Grid.SendMailWindow = Ext2.extend(Ext2.Window,
             ]
         });
 
-        this.linkTextArea = new Ext2.form.TextArea({
+        this.linkTextArea = new Ext.form.TextArea({
             width: 300,
             height: 30,
             readOnly: true
         });
 
-        this.generateActivationLinkPanel = new Ext2.form.FieldSet({
+        this.generateActivationLinkPanel = new Ext.form.FieldSet({
             title: trlKwf('Generate a new activation link'),
             buttonAlign: 'left',
             layout: 'fit',
@@ -66,7 +73,7 @@ Kwf.User.Grid.SendMailWindow = Ext2.extend(Ext2.Window,
                 {
                     text: trlKwf('Generate'),
                     handler: function() {
-                        Ext2.Ajax.request({
+                        Ext.Ajax.request({
                             url: this.controllerUrl+'/json-generate-activation-link',
                             params: this.baseParams,
                             mask: this.el,
@@ -81,12 +88,12 @@ Kwf.User.Grid.SendMailWindow = Ext2.extend(Ext2.Window,
             ]
 
         });
-        var infoPanel = new Ext2.Panel({
+        var infoPanel = new Ext.Panel({
             bodyCssClass: 'userMailResendInfo',
             border: false,
             html: trlKwf('Please select the E-Mail type you wish to send to the user.')
         });
-        var infoPanel2 = new Ext2.Panel({
+        var infoPanel2 = new Ext.Panel({
             bodyCssClass: 'userMailResendInfo',
             border: false,
             html: trlKwf('Warning: this invalidates all previously generated activation links.')
@@ -105,6 +112,6 @@ Kwf.User.Grid.SendMailWindow = Ext2.extend(Ext2.Window,
                 scope: this
             }
         ];
-        Kwf.User.Grid.SendMailWindow.superclass.initComponent.call(this);
+        this.callParent(arguments);
     }
 });

@@ -1,7 +1,14 @@
-Kwc.Paragraphs.DataView = Ext2.extend(Ext2.DataView, {
+Ext.define('Kwc.Paragraphs.DataView', {
+    extend: 'Ext.view.View',
+    requires: [
+        'Ext.util.DelayedTask',
+        'Ext.Toolbar',
+        'Ext.form.field.ComboBox',
+        'Kwc.Paragraphs.AddParagraphButton'
+    ],
     autoHeight: true,
     multiSelect: true,
-    overClass: 'x2-view-over',
+    overItemCls: 'x-view-over',
     itemSelector: 'div.paragraph-wrap',
     showToolbars: true,
     showDelete: true,
@@ -11,41 +18,45 @@ Kwc.Paragraphs.DataView = Ext2.extend(Ext2.DataView, {
     initComponent: function()
     {
         this.componentConfigs = {};
-
-        this.addEvents('delete', 'edit', 'changeVisible', 'changeDeviceVisible', 'changePos',
-            'addParagraphMenuShow', 'addParagraph', 'copyParagraph',
-            'pasteParagraph', 'copyPasteMenuShow');
-        this.tpl = new Ext2.XTemplate(
+        this.tpl = new Ext.XTemplate(
             '<tpl for=".">',
                 '<div class="paragraph-wrap<tpl if="!visible"> kwc-paragraph-invisible</tpl>" id="kwc-paragraphs-{id}" style="width:'+this.width+'px">',
                     '<div class="kwc-paragraphs-toolbar"></div>',
                     '<div class="kwfUp-webStandard kwc-paragraphs-preview">{preview}</div>',
                 '</div>',
             '</tpl>',
-            '<div class="x2-clear"></div>'
+            '<div class="x-clear"></div>'
         );
 
         //buffer callOnContentReady for better performance when changing multiple rows - which happens when
         //deleting and entry and all below have to be re-numbered
-        this.callOnContentReadyTask = new Ext2.util.DelayedTask(function() {
+        this.callOnContentReadyTask = new Ext.util.DelayedTask(function() {
             Kwf.Legacy.OnReadyExt2.callOnContentReady(this.el, { newRender: true });
         }, this);
 
-        Kwc.Paragraphs.DataView.superclass.initComponent.call(this);
+        this.callParent(arguments);
+    },
+
+    afterRender: function() {
+        this.callParent(arguments);
+        this.mun(this.el, {
+            scope: this,
+            click: this.handleEvent
+        });
     },
 
     onUpdate: function() {
-        var ret = Kwc.Paragraphs.DataView.superclass.onUpdate.apply(this, arguments);
+        var ret = this.callParent(arguments);
         this.updateToolbars();
         return ret;
     },
-    onAdd: function() {
-        var ret = Kwc.Paragraphs.DataView.superclass.onAdd.apply(this, arguments);
+    onAddClick: function() {
+        var ret = this.callParent(arguments);
         this.updateToolbars();
         return ret;
     },
     refresh: function() {
-        var ret = Kwc.Paragraphs.DataView.superclass.refresh.apply(this, arguments);
+        var ret = this.callParent(arguments);
         this.updateToolbars();
         return ret;
     },
@@ -61,8 +72,8 @@ Kwc.Paragraphs.DataView = Ext2.extend(Ext2.DataView, {
                 continue;
             }
             node.hasParagraphsToolbarRendered = true;
-            var tbCt = Ext2.get(node).down('.kwc-paragraphs-toolbar');
-            var tb = new Ext2.Toolbar({
+            var tbCt = Ext.get(node).down('.kwc-paragraphs-toolbar');
+            var tb = new Ext.Toolbar({
                 renderTo: tbCt
             });
             var record = this.getRecord(node);
@@ -80,10 +91,11 @@ Kwc.Paragraphs.DataView = Ext2.extend(Ext2.DataView, {
                 this.fireEvent('changeVisible', btn.record);
             },
             icon : '/assets/silkicons/'+(record.get('visible') ? 'tick' : 'cross') + '.png',
-            cls  : 'x2-btn-icon'
+            cls  : 'x-btn-icon'
         });
         if (this.showDeviceVisible) {
             var deviceVisibleMenu = {
+                menuAlign: 'bl',
                 menu: [{
                     text: trlKwf('show on all devices'),
                     icon: '/assets/kwf/images/devices/showAll.png',
@@ -109,7 +121,7 @@ Kwc.Paragraphs.DataView = Ext2.extend(Ext2.DataView, {
                         this.fireEvent('changeDeviceVisible', menu.record, 'onlyShowOnMobile');
                     }
                 }],
-                cls  : 'x2-btn-icon'
+                cls  : 'x-btn-icon'
             };
             if (record.get('device_visible') == 'onlyShowOnMobile') {
                 deviceVisibleMenu.icon = '/assets/kwf/images/devices/smartphone.png';
@@ -122,10 +134,10 @@ Kwc.Paragraphs.DataView = Ext2.extend(Ext2.DataView, {
         }
 
         if (this.showPosition) {
-            var posCombo = new Kwf.Form.ComboBox({
+            var posCombo = new Ext.form.field.ComboBox({
                 listClass: 'kwc-paragraphs-pos-list',
                 tpl: '<tpl for=".">' +
-                    '<div class="x2-combo-list-item<tpl if="visible"> visible</tpl><tpl if="!visible"> invisible</tpl>">'+
+                    '<div class="x-combo-list-item<tpl if="visible"> visible</tpl><tpl if="!visible"> invisible</tpl>">'+
                         '{pos} - {component_name}'+
                     '</div>'+
                     '</tpl>',
@@ -163,7 +175,7 @@ Kwc.Paragraphs.DataView = Ext2.extend(Ext2.DataView, {
                     this.fireEvent('delete', btn.record);
                 },
                 icon : '/assets/silkicons/bin.png',
-                cls  : 'x2-btn-icon'
+                cls  : 'x-btn-icon'
             });
         }
         if (record.get('edit_components').length == 1) {
@@ -176,7 +188,7 @@ Kwc.Paragraphs.DataView = Ext2.extend(Ext2.DataView, {
                     this.fireEvent('edit', btn.record, Kwf.clone(btn.record.get('edit_components')[0]));
                 },
                 icon : '/assets/silkicons/application_edit.png',
-                cls  : 'x2-btn-text-icon'
+                cls  : 'x-btn-text-icon'
             });
         } else if (record.get('edit_components').length > 1) {
             tb.add('-');
@@ -198,12 +210,12 @@ Kwc.Paragraphs.DataView = Ext2.extend(Ext2.DataView, {
                 text: trlKwf('edit'),
                 menu: menu,
                 icon : '/assets/silkicons/application_edit.png',
-                cls  : 'x2-btn-text-icon'
+                cls  : 'x-btn-text-icon'
             });
         }
         if (this.components) {
             tb.add('-');
-            tb.add(new Kwc.Paragraphs.AddParagraphButton({
+            tb.add(Kwc.Paragraphs.AddParagraphButton.create({
                 record: record,
                 components: this.components,
                 componentIcons: this.componentIcons,
@@ -237,7 +249,7 @@ Kwc.Paragraphs.DataView = Ext2.extend(Ext2.DataView, {
                         }
                     }],
                     icon: '/assets/silkicons/page_white_copy.png',
-                    cls  : 'x2-btn-text-icon',
+                    cls  : 'x-btn-text-icon',
                     record: record,
                     listeners: {
                         scope: this,

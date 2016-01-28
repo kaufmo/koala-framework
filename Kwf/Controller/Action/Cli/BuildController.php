@@ -39,6 +39,14 @@ class Kwf_Controller_Action_Cli_BuildController extends Kwf_Controller_Action_Cl
         }
     }
 
+    public function debugAction()
+    {
+        $d = Kwf_Assets_Package_Default::getDefaultProviderList()->findDependency('Admin');
+//        $d->printDebugTree();
+        p($d->getFilteredUniqueDependencies('text/javascript'));
+        exit;
+    }
+
     public function showExtDepAction()
     {
         $d = Kwf_Assets_Package_Default::getDefaultProviderList()->findDependency('Frontend');

@@ -1,6 +1,8 @@
-Kwf.Form.MultiCheckbox = Ext2.extend(Kwf.Form.FieldSet, {
+Ext.define('Kwf.Form.MultiCheckbox', {
+    extend: 'Kwf.Form.FieldSet',
+    alias: 'widget.multicheckbox',
     afterRender: function() {
-        Kwf.Form.MultiCheckbox.superclass.afterRender.call(this);
+        this.callParent(arguments);
 
         if (this.showCheckAllLinks && this.header) {
             var checkAllWrapper = this.header.createChild({ tag: 'span', cls: 'kwfCheckAllWrapper' });
@@ -38,5 +40,3 @@ Kwf.Form.MultiCheckbox = Ext2.extend(Kwf.Form.FieldSet, {
         }
     }
 });
-
-Ext2.reg('multicheckbox', Kwf.Form.MultiCheckbox);

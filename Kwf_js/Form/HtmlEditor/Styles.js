@@ -1,35 +1,40 @@
-Kwf.Form.HtmlEditor.Styles = function(config) {
-    Ext2.apply(this, config);
+Ext.define('Kwf.Form.HtmlEditor.Styles', {
+    extend: 'Ext.mixin.Observable',
+    requires: [
+        'Ext.button.Button',
+        'Ext.data.JsonStore',
+        'Ext.form.field.ComboBox'
+    ],
+    constructor: function(config) {
+        Ext.apply(this, config);
 
-    this.editStyles = new Ext2.Action({
-        testId: 'editStyles',
-        icon: '/assets/silkicons/style_edit.png',
-        handler: function() {
-            this.stylesEditorDialog.show();
-        },
-        scope: this,
-        tooltip: {
-            cls: 'x2-html-editor-tip',
-            title: trlKwf('Edit Styles'),
-            text: trlKwf('Modify and Create Styles.')
-        },
-        cls: 'x2-btn-icon',
-        clickEvent: 'mousedown',
-        tabIndex: -1
-    });
+        this.editStyles = new Ext.Button({
+            testId: 'editStyles',
+            icon: '/assets/silkicons/style_edit.png',
+            handler: function() {
+                this.stylesEditorDialog.show();
+            },
+            scope: this,
+            tooltip: {
+                cls: 'x-html-editor-tip',
+                title: trlKwf('Edit Styles'),
+                text: trlKwf('Modify and Create Styles.')
+            },
+            cls: 'x-btn-icon',
+            clickEvent: 'mousedown',
+            tabIndex: -1
+        });
 
-    if (this.stylesEditorConfig) {
-        this.stylesEditorDialog = Ext2.ComponentMgr.create(this.stylesEditorConfig);
-        this.stylesEditorDialog.on('hide', this._reloadStyles, this);
-    }
-};
-
-Ext2.extend(Kwf.Form.HtmlEditor.Styles, Ext2.util.Observable, {
+        if (this.stylesEditorConfig) {
+            this.stylesEditorDialog = Ext.ComponentMgr.create(this.stylesEditorConfig);
+            this.stylesEditorDialog.on('hide', this._reloadStyles, this);
+        }
+    },
     stylesIdPattern: null,
     init: function(cmp){
         this.cmp = cmp;
         this.cmp.on('initialize', this.onInit, this, {delay: 1, single: true});
-        this.cmp.afterMethod('createToolbar', this.afterCreateToolbar, this);
+        this.cmp.on('afterRender', this.afterCreateToolbar, this);
         this.cmp.afterMethod('updateToolbar', this.updateToolbar, this);
         this.cmp.afterMethod('setValue', this.setValue, this);
         this.cmp.afterMethod('onRender', this.onRender, this);
@@ -144,7 +149,7 @@ Ext2.extend(Kwf.Form.HtmlEditor.Styles, Ext2.util.Observable, {
         };
         reloadCss.call(this, document);
         if (this.cmp.doc) reloadCss.call(this, this.cmp.doc);
-        Ext2.Ajax.request({
+        Ext.Ajax.request({
             params: {
                 componentId: this.cmp.componentId
             },
@@ -175,15 +180,15 @@ Ext2.extend(Kwf.Form.HtmlEditor.Styles, Ext2.util.Observable, {
         }
         var select = this.select[type];
         if (!select.select) {
-            select.select = new Kwf.Form.ComboBox({
+            select.select = new Ext.form.field.ComboBox({
                 testId: type+'StyleSelect',
                 editable: false,
                 triggerAction: 'all',
                 forceSelection: true,
-                tpl: '<tpl for="."><div class="x2-combo-list-item kwfUp-webStandard kwcText"><{tagName} class="{className}">{name}</{tagName}></div></tpl>',
+                tpl: '<tpl for="."><div class="x-combo-list-item kwfUp-webStandard kwcText"><{tagName} class="{className}">{name}</{tagName}></div></tpl>',
                 mode: 'local',
                 width: 150,
-                store: new Ext2.data.JsonStore({
+                store: new Ext.data.JsonStore({
                     autoDestroy: true,
                     fields: ['id', 'name', 'tagName', 'className'],
                     data: this.filterStylesByType(type)

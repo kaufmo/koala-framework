@@ -1,6 +1,9 @@
-Ext2.form.Field.prototype.afterRenderExt = Ext2.form.Field.prototype.afterRender;
-
-Ext2.form.Field.override({
+Ext.define('Kwf.overrides.form.field.Field', {
+    override: 'Ext.form.field.Field',
+    requires: [
+        'Ext.window.Window',
+        'Ext.tab.Panel'
+    ],
     getName: function() {
         //http://extjs.com/forum/showthread.php?t=15236
         return this.rendered && this.el.dom.name ? this.el.dom.name : (this.name || this.hiddenName || '');
@@ -19,19 +22,19 @@ Ext2.form.Field.override({
 
     // Für Hilfetexte afterRender in Formularfields überschreiben
     afterRender: function() {
-        this.afterRenderExt();
+        this.callParent(arguments);
         if (this.helpText){
-            var wrapDiv = this.getEl().up('div.x2-form-element');
+            var wrapDiv = this.getEl().up('div.x-form-element');
             if (wrapDiv) {
                 var helpEl = wrapDiv.createChild({
                     tag: 'a',
                     href: '#',
                     style: 'display: inline-block; width: 16px; height: 16px; left: 4px; top: 4px; position: relative;'+
-                        'background-image: url(/assets/silkicons/information.png)'
+                    'background-image: url(/assets/silkicons/information.png)'
                 });
                 helpEl.on('click', function(e) {
                     e.stopEvent();
-                    var helpWindow = new Ext2.Window({
+                    var helpWindow = new Ext.window.Window({
                         html: this.helpText,
                         width: 450,
                         bodyStyle: 'padding: 10px; background-color: white;',
@@ -43,17 +46,17 @@ Ext2.form.Field.override({
                     });
                     helpWindow.show();
                 }, this);
-                this.helpEl = Ext2.get(helpEl);
+                this.helpEl = Ext.get(helpEl);
             }
         }
         if (this.comment){
-            var wrapDiv = this.getEl().up('div.x2-form-element');
+            var wrapDiv = this.getEl().up('div.x-form-element');
             if (wrapDiv) {
                 var commentEl = wrapDiv.createChild({
                     html: this.comment,
                     tag: 'span'
                 });
-                this.commentEl = Ext2.get(commentEl);
+                this.commentEl = Ext.get(commentEl);
             }
         }
         this.alignHelpAndComment();
@@ -62,7 +65,7 @@ Ext2.form.Field.override({
         //re-align when tab is shown
         if (this.ownerCt) {
             this.ownerCt.bubble(function(c) {
-                if (c.ownerCt instanceof Ext2.TabPanel) {
+                if (c.ownerCt instanceof Ext.tab.Panel) {
                     c.on('show', this.alignHelpAndComment, this);
                 }
             }, this);

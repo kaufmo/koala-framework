@@ -1,6 +1,10 @@
-Ext2.namespace('Kwc.Basic.Text');
-Kwc.Basic.Text.StylesEditor = Ext2.extend(Ext2.Window,
-{
+Ext.define('Kwc.Basic.Text.StylesEditor', {
+    extend: 'Ext.window.Window',
+    alias: 'widget.kwc.basic.text.styleseditor',
+    requires: [
+        'Kwc.Basic.Text.StylesEditorTab',
+        'Ext.tab.Panel'
+    ],
     title: trlKwf('Edit Styles'),
     modal: true,
     width: 650,
@@ -17,12 +21,12 @@ Kwc.Basic.Text.StylesEditor = Ext2.extend(Ext2.Window,
                 title: trlKwf('Inline-Styles'),
                 controllerUrl: this.inlineStyleUrl
             });
-        this.items = new Ext2.TabPanel({
+        this.items = new Ext.TabPanel({
             items: [this.block, this.inline],
             activeTab: 0
         });
 
-        Kwc.Basic.Text.StylesEditor.superclass.initComponent.call(this);
+        this.callParent(arguments);
     },
     applyBaseParams: function(params) {
         this.block.applyBaseParams(params);
@@ -31,7 +35,7 @@ Kwc.Basic.Text.StylesEditor = Ext2.extend(Ext2.Window,
     show: function() {
         this.block.load();
         this.inline.load();
-        Kwc.Basic.Text.StylesEditor.superclass.show.call(this);
+        this.callParent(arguments);
     }
 /*
         this.form.on('renderform', function() {
@@ -81,6 +85,3 @@ Kwc.Basic.Text.StylesEditor = Ext2.extend(Ext2.Window,
     }
 */
 });
-
-Ext2.reg('kwc.basic.text.styleseditor', Kwc.Basic.Text.StylesEditor);
-

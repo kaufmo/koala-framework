@@ -1,22 +1,27 @@
-Kwf.Welcome = Ext2.extend(Ext2.Panel,
-{
+Ext.define('Kwf.Welcome', {
+    extend: 'Ext.panel.Panel',
     afterRender: function() {
-        this.welcomePanel = new Ext2.Panel({
+        this.welcomePanel = Ext.panel.Panel.create({
             cls: 'kwf-welcome',
             width: 304,
-            autoLoad: '/kwf/welcome/content',
+            loader: {
+                url: '/kwf/welcome/content',
+                autoLoad: true
+            },
             border: false,
             renderTo: this.getEl()
         });
-        this.welcomePanel.getUpdater().on('update', function() {
+        this.welcomePanel.getLoader().on('load', function() {
             this.welcomePanel.getEl().center();
         }, this);
-        Kwf.Welcome.superclass.afterRender.call(this);
+        this.callParent(arguments);
     },
     onResize: function(w, h) {
-        Kwf.Welcome.superclass.onResize.call(this, w, h);
+        this.callParent(arguments);
         this.welcomePanel.getEl().center();
     }
 });
 window.Welcome = Kwf.Welcome;
-
+Ext.enableAria = false;
+Ext.enableAriaButtons = false;
+Ext.enableAriaPanels = false;

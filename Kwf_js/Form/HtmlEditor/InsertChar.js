@@ -1,7 +1,15 @@
-Kwf.Form.HtmlEditor.InsertChar = Ext2.extend(Ext2.util.Observable, {
+Ext.define('Kwf.Form.HtmlEditor.InsertChar', {
+    extend: 'Ext.mixin.Observable',
+    requires: [
+        'Kwf.Form.InsertCharWindow',
+        'Ext.button.Button'
+    ],
+    uses: [
+        'Ext.form.field.HtmlEditor'
+    ],
     init: function(cmp){
         this.cmp = cmp;
-        this.cmp.afterMethod('createToolbar', this.afterCreateToolbar, this);
+        this.cmp.on('afterRender', this.afterCreateToolbar, this);
         this.cmp.on('initialize', this.onInit, this, {delay:100, single: true});
     },
     // private
@@ -11,19 +19,19 @@ Kwf.Form.HtmlEditor.InsertChar = Ext2.extend(Ext2.util.Observable, {
     // private
     afterCreateToolbar: function() {
         var tb = this.cmp.getToolbar();
-        tb.insert(9, {
+        tb.insert(9, new Ext.Button({
             icon: '/assets/silkicons/text_letter_omega.png',
             handler: this.onInsertChar,
             scope: this,
             tooltip: {
-                cls: 'x2-html-editor-tip',
+                cls: 'x-html-editor-tip',
                 title: trlKwf('Character'),
                 text: trlKwf('Insert a custom character.')
             },
-            cls: 'x2-btn-icon',
+            cls: 'x-btn-icon',
             clickEvent: 'mousedown',
             tabIndex: -1
-        });
+        }));
 
     },
 
@@ -37,7 +45,7 @@ Kwf.Form.HtmlEditor.InsertChar = Ext2.extend(Ext2.util.Observable, {
                 closeAction: 'hide',
                 autoScroll: true
             });
-            Kwf.Form.HtmlEditor.insertCharWindow = win;
+            Kwf.Form.HtmlEditor.InsertChar.insertCharWindow = win;
         }
 
         var bookmark = this.cmp.tinymceEditor.selection.getBookmark();

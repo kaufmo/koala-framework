@@ -398,10 +398,10 @@ abstract class Kwf_Controller_Action_Auto_Synctree extends Kwf_Controller_Action
         $data['uiProvider'] = 'Kwf.Tree.Node';
         if (isset($row->visible) && $row->visible == '0') { //TODO visible nicht hardcodieren
             $data['visible'] = false;
-            $data['bIcon'] = $this->_icons['invisible']->__toString();
+            $data['icon'] = $this->_icons['invisible']->__toString();
         } else {
             $data['visible'] = true;
-            $data['bIcon'] = $this->_icons['default']->__toString();
+            $data['icon'] = $this->_icons['default']->__toString();
         }
         $openedNodes = $this->_saveSessionNodeOpened(null, null);
         $data['uiProvider'] = 'Kwf.Tree.Node';
@@ -540,7 +540,7 @@ abstract class Kwf_Controller_Action_Auto_Synctree extends Kwf_Controller_Action
             if ($targetRow) {
                 if ($this->_hasPosition) {
                     $targetPosition = $targetRow->pos;
-                    if ($point == 'below') {
+                    if ($point == 'after') {
                         $targetPosition++;
                     }
                     if ($row->$parentField == $targetRow->$parentField &&

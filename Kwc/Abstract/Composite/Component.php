@@ -4,7 +4,7 @@ class Kwc_Abstract_Composite_Component extends Kwc_Abstract
     public static function getSettings()
     {
         $ret = parent::getSettings();
-        $ret['assetsAdmin']['dep'][] = 'KwfTabPanel';
+//        $ret['assetsAdmin']['dep'][] = 'KwfTabPanel';
         $ret['generators']['child'] = array(
             'class' => 'Kwf_Component_Generator_Static',
             'component' => array()

@@ -29,8 +29,7 @@ abstract class Kwf_Controller_Action_Component_PagesAbstractController extends K
         $data = array_merge($data, $nodeConfig);
         $icon = $data['icon'];
         if (is_string($icon)) { $icon = new Kwf_Asset($icon); }
-        $data['bIcon'] = $icon->toString($data['iconEffects']);
-        if (isset($data['icon'])) unset($data['icon']);
+        $data['icon'] = $icon->toString($data['iconEffects']);
 
         if (!$data['expanded']) {
             $openedNodes = $this->_saveSessionNodeOpened(null, null);

@@ -1,4 +1,8 @@
-Kwf.Form.HtmlEditor.Tidy = Ext2.extend(Ext2.util.Observable, {
+Ext.define('Kwf.Form.HtmlEditor.Tidy', {
+    extend: 'Ext.mixin.Observable',
+    requires: [
+        'Ext.util.DelayedTask'
+    ],
     init: function(cmp){
         this.cmp = cmp;
         this.cmp.on('initialize', this.onInit, this, {delay:100, single: true});
@@ -7,7 +11,7 @@ Kwf.Form.HtmlEditor.Tidy = Ext2.extend(Ext2.util.Observable, {
 
     // private
     onInit: function(){
-        Ext2.EventManager.on(this.cmp.doc, 'keydown', function(e) {
+        Ext.get(this.cmp.getDoc()).on('keydown', function(e) {
             if (e.ctrlKey) {
                 var c = e.getCharCode();
                 if (c > 0) {
@@ -27,7 +31,7 @@ Kwf.Form.HtmlEditor.Tidy = Ext2.extend(Ext2.util.Observable, {
                                     scope: this
                                 });
                             };
-                            this.pasteDelayTask = new Ext2.util.DelayedTask(pasteClean, this);
+                            this.pasteDelayTask = new Ext.util.DelayedTask(pasteClean, this);
                         }
                         this.pasteDelayTask.delay(100);
                     }
@@ -49,9 +53,9 @@ Kwf.Form.HtmlEditor.Tidy = Ext2.extend(Ext2.util.Observable, {
             html: this.cmp.getValue()
         };
         if (tidyOptions && tidyOptions.params) {
-            Ext2.applyIf(params, tidyOptions.params);
+            Ext.applyIf(params, tidyOptions.params);
         }
-        Ext2.Ajax.request({
+        Ext.Ajax.request({
             url: this.cmp.controllerUrl+'/json-tidy-html',
             params: params,
             failure: function() {

@@ -1,6 +1,9 @@
-Ext2.namespace('Kwc.Basic.ImageEnlarge');
-Kwc.Basic.ImageEnlarge.ImageUploadField = Ext2.extend(Kwc.Abstract.Image.ImageUploadField, {
-
+Ext.define('Kwc.Basic.ImageEnlarge.ImageUploadField', {
+    extend: 'Kwc.Abstract.Image.ImageUploadField',
+    alias: 'widget.kwc.basic.imageenlarge.imageuploadfield',
+    uses: [
+        'Kwc.Abstract.Image.DimensionField'
+    ],
     _findUseCropCheckbox: function () {
         var useCropCheckboxes = this.findParentBy(function (component, container){
             if (component.identifier == 'kwc-basic-imageenlarge-form') {
@@ -71,18 +74,14 @@ Kwc.Basic.ImageEnlarge.ImageUploadField = Ext2.extend(Kwc.Abstract.Image.ImageUp
                 dimensionField.getEl().child('.kwc-abstract-image-dimension-name')
                     .update(trlKwf('At least: ')+pixelString);
 
-                Kwc.Basic.ImageEnlarge.ImageUploadField.superclass
-                    ._validateImageTooSmallUserNotification.call(this, value, dimensions, scaleFactor, fileUploadField, dimensionField, dpr2);
+                this.callParent(arguments);
             }
         } else {
             var pixelString = Kwc.Abstract.Image.DimensionField
                 .getDimensionPixelString(dimensions[value.dimension], value, dpr2);
             dimensionField.getEl().child('.kwc-abstract-image-dimension-name')
                 .update(trlKwf('At least: ')+pixelString);
-            Kwc.Basic.ImageEnlarge.ImageUploadField.superclass
-                ._validateImageTooSmallUserNotification.call(this, value, dimensions, scaleFactor, fileUploadField, dimensionField, dpr2);
+            this.callParent(arguments);
         }
     }
 });
-
-Ext2.reg('kwc.basic.imageenlarge.imageuploadfield', Kwc.Basic.ImageEnlarge.ImageUploadField);

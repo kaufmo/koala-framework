@@ -25,7 +25,7 @@ class Kwc_Menu_EditableItems_Component extends Kwc_Abstract
         $ret['componentName'] = trlKwfStatic('Menu');
         $ret['componentIcon'] = 'layout';
         $ret['rootElementClass'] = 'kwfUp-webStandard';
-        $ret['assetsAdmin']['dep'][] = 'KwfProxyPanel';
+//        $ret['assetsAdmin']['dep'][] = 'KwfProxyPanel';
         $ret['assetsAdmin']['files'][] = 'kwf/Kwc/Abstract/List/List.js';
 
         $ret['extConfig'] = 'Kwc_Menu_EditableItems_ExtConfig';

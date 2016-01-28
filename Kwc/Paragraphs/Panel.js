@@ -1,23 +1,17 @@
-Ext2.namespace('Kwc.Paragraphs');
-
-
-Kwc.Paragraphs.PanelJsonReader = Ext2.extend(Ext2.data.JsonReader,
-{
-    readRecords: function(o) {
-        var ret = Kwc.Paragraphs.PanelJsonReader.superclass.readRecords.apply(this, arguments);
-        if (o.componentConfigs) {
-            this.paragraphsPanel.fireEvent('gotComponentConfigs', o.componentConfigs);
-            Ext2.applyIf(this.paragraphsPanel.dataView.componentConfigs, o.componentConfigs);
-        }
-        if (o.contentWidth) {
-            this.paragraphsPanel.dataView.setWidth(o.contentWidth + 20);
-        }
-        return ret;
-    }
-});
-
-Kwc.Paragraphs.Panel = Ext2.extend(Kwf.Binding.AbstractPanel,
-{
+Ext.define('Kwc.Paragraphs.Panel', {
+    extend: 'Kwf.Binding.AbstractPanel',
+    alias: 'widget.kwc.paragraphs',
+    requires: [
+        'Kwc.Paragraphs.DataView',
+        'Kwc.Paragraphs.AddParagraphButton',
+        'Kwc.Paragraphs.PanelJsonReader',
+        'Ext.Action',
+        'Ext.button.Button',
+        'Ext.window.MessageBox',
+        'Ext.data.proxy.Ajax',
+        'Ext.data.Store',
+        'Ext.util.DelayedTask'
+    ],
     layout:'auto',
     cls: 'kwc-paragraphs',
     showDelete: true,
@@ -26,8 +20,6 @@ Kwc.Paragraphs.Panel = Ext2.extend(Kwf.Binding.AbstractPanel,
     _loadingCount: 0,
     initComponent : function()
     {
-        this.addEvents('editcomponent', 'gotComponentConfigs');
-
         if (this.autoLoad !== false) {
             this.autoLoad = true;
         } else {
@@ -60,10 +52,10 @@ Kwc.Paragraphs.Panel = Ext2.extend(Kwf.Binding.AbstractPanel,
 
         this.items = [ this.dataView ];
 
-        this.actions.showPreview = new Ext2.Action({
+        this.actions.showPreview = new Ext.Action({
             text : trlKwf('Preview'),
             icon : '/assets/silkicons/zoom.png',
-            cls  : 'x2-btn-text-icon',
+            cls  : 'x-btn-text-icon',
             enableToggle: true,
             handler: function(b) {
                 this.dataView.showToolbars = !b.pressed;
@@ -76,10 +68,10 @@ Kwc.Paragraphs.Panel = Ext2.extend(Kwf.Binding.AbstractPanel,
             scope: this
         });
 
-        this.actions.showPreviewWeb = new Ext2.Action({
+        this.actions.showPreviewWeb = new Ext.Action({
             text : trlKwf('Preview in web'),
             icon : '/assets/silkicons/zoom_in.png',
-            cls  : 'x2-btn-text-icon',
+            cls  : 'x-btn-text-icon',
             handler: function(b) {
                 window.open(this.controllerUrl+'/open-preview?componentId='+
                     this.getBaseParams().componentId);
@@ -87,19 +79,19 @@ Kwc.Paragraphs.Panel = Ext2.extend(Kwf.Binding.AbstractPanel,
             scope: this
         });
 
-        this.actions.makeAllVisible = new Ext2.Action({
+        this.actions.makeAllVisible = new Ext.Action({
             text : trlKwf('All Visible'),
             icon : '/assets/silkicons/tick.png',
-            cls  : 'x2-btn-text-icon',
+            cls  : 'x-btn-text-icon',
             handler: function(b) {
-                Ext2.Msg.show({
+                Ext.Msg.show({
                     title: trlKwf('All Visible'),
                     msg: trlKwf('Do you really wish to set everything to visible?'),
-                    buttons: Ext2.Msg.YESNO,
+                    buttons: Ext.Msg.YESNO,
                     scope: this,
                     fn: function(button) {
                         if (button == 'yes') {
-                            Ext2.Ajax.request({
+                            Ext.Ajax.request({
                                 mask: this.el,
                                 maskText: trlKwf('Setting visible...'),
                                 url: this.controllerUrl+'/json-make-all-visible',
@@ -117,7 +109,7 @@ Kwc.Paragraphs.Panel = Ext2.extend(Kwf.Binding.AbstractPanel,
         });
 
         if (this.components) {
-            this.actions.addparagraph = new Kwc.Paragraphs.AddParagraphButton({
+            this.actions.addparagraph = Kwc.Paragraphs.AddParagraphButton.create({
                 components: this.components,
                 componentIcons: this.componentIcons,
                 listeners: {
@@ -148,7 +140,7 @@ Kwc.Paragraphs.Panel = Ext2.extend(Kwf.Binding.AbstractPanel,
                     }
                 }],
                 icon: '/assets/silkicons/page_white_copy.png',
-                cls  : 'x2-btn-text-icon',
+                cls  : 'x-btn-text-icon',
                 listeners: {
                     scope: this,
                     menushow: function(btn) {
@@ -167,8 +159,8 @@ Kwc.Paragraphs.Panel = Ext2.extend(Kwf.Binding.AbstractPanel,
             }
         }
         this.tbar.push('->');
-        this._loading = new Ext2.Button({
-            iconCls: "x2-tbar-loading",
+        this._loading = new Ext.Button({
+            iconCls: "x-tbar-loading",
             disabled: true,
             text: trlKwf('Saving')
         });
@@ -177,7 +169,11 @@ Kwc.Paragraphs.Panel = Ext2.extend(Kwf.Binding.AbstractPanel,
 
         this.tbar.push(this.actions.makeAllVisible);
 
-        Kwc.Paragraphs.Panel.superclass.initComponent.call(this);
+        this.callParent(arguments);
+
+        if (this.autoLoad) {
+            this.on('render', this.doAutoLoad, this, {delay:10});
+        }
     },
 
     doAutoLoad : function()
@@ -191,9 +187,9 @@ Kwc.Paragraphs.Panel = Ext2.extend(Kwf.Binding.AbstractPanel,
     load: function(params, options) {
         if (!params) params = {};
         if (!this.store) {
-            Ext2.applyIf(params, this.baseParams);
+            Ext.applyIf(params, this.baseParams);
             params.meta = true;
-            Ext2.Ajax.request({
+            Ext.Ajax.request({
                 mask: true,
                 url: this.controllerUrl+'/json-data',
                 params: params,
@@ -222,29 +218,33 @@ Kwc.Paragraphs.Panel = Ext2.extend(Kwf.Binding.AbstractPanel,
 
         var reader = new Kwc.Paragraphs.PanelJsonReader({
             totalProperty: meta.totalProperty,
-            root: meta.root,
-            id: meta.id,
-            sucessProperty: meta.successProperty,
-            fields: meta.fields
+            rootProperty: meta.root,
+            successProperty: meta.successProperty
         });
         reader.paragraphsPanel = this;
         var storeConfig = {
-            proxy: new Ext2.data.HttpProxy({ url: this.controllerUrl + '/json-data' }),
-            reader: reader,
+            proxy: new Ext.data.HttpProxy({
+                url: this.controllerUrl + '/json-data',
+                idParam: meta.id,
+                reader: reader
+            }),
             sortInfo: meta.sortInfo,
-            remoteSort: false
+            remoteSort: false,
+            fields: meta.fields
         };
-        this.store = new Ext2.data.Store(storeConfig);
+        this.store = new Ext.data.Store(storeConfig);
         if (this.baseParams) {
             this.setBaseParams(this.baseParams);
             delete this.baseParams;
         }
         this.dataView.setStore(this.store);
-        this.loadMask = new Ext2.LoadMask(this.bwrap,
-                Ext2.apply({store:this.store}, this.loadMask));
+        //this.loadMask = new Ext.LoadMask(Ext.apply({
+        //    store: this.store,
+        //    target: this.body
+        //}, this.loadMask));
 
         if (result.rows) {
-            this.store.loadData(result);
+            this.store.loadRawData(result);
         }
     },
     getStore : function() {
@@ -252,14 +252,14 @@ Kwc.Paragraphs.Panel = Ext2.extend(Kwf.Binding.AbstractPanel,
     },
     getBaseParams : function() {
         if (this.getStore()) {
-            return this.getStore().baseParams;
+            return this.getStore().getProxy().extraParams;
         } else {
             return this.baseParams || {};
         }
     },
     setBaseParams : function(baseParams) {
         if (this.getStore()) {
-            this.getStore().baseParams = baseParams;
+            this.getStore().getProxy().extraParams = baseParams;
         } else {
             //no store yet, apply them later
             this.baseParams = baseParams;
@@ -267,11 +267,11 @@ Kwc.Paragraphs.Panel = Ext2.extend(Kwf.Binding.AbstractPanel,
     },
     applyBaseParams : function(baseParams) {
         if (this.getStore()) {
-            Ext2.apply(this.getStore().baseParams, baseParams);
+            Ext.apply(this.getStore().getProxy().extraParams, baseParams);
         } else {
             //no store yet, apply them later
             if (!this.baseParams) this.baseParams = {};
-            Ext2.apply(this.baseParams, baseParams);
+            Ext.apply(this.baseParams, baseParams);
         }
     },
 
@@ -285,7 +285,7 @@ Kwc.Paragraphs.Panel = Ext2.extend(Kwf.Binding.AbstractPanel,
             data.push(r.data);
         }, this);
         var params = this.getBaseParams() || {};
-        params.data = Ext2.util.JSON.encode(data);
+        params.data = Ext.JSON.encode(data);
         return params;
     },
 
@@ -316,7 +316,7 @@ Kwc.Paragraphs.Panel = Ext2.extend(Kwf.Binding.AbstractPanel,
         this._loading.show();
 
         if (!this._submitTask) {
-            this._submitTask = new Ext2.util.DelayedTask(function(){
+            this._submitTask = new Ext.util.DelayedTask(function(){
                 this._doSubmit();
             }, this);
         }
@@ -331,7 +331,7 @@ Kwc.Paragraphs.Panel = Ext2.extend(Kwf.Binding.AbstractPanel,
         this.store.modified = [];
 
 
-        Ext2.Ajax.request({
+        Ext.Ajax.request({
             url: this.controllerUrl+'/json-save',
             params: params,
             success: function(response, options, r) {
@@ -380,10 +380,10 @@ Kwc.Paragraphs.Panel = Ext2.extend(Kwf.Binding.AbstractPanel,
     },
 
     onDelete : function(record) {
-        Ext2.Msg.show({
+        Ext.Msg.show({
             title: trlKwf('Delete'),
             msg: trlKwf('Do you really wish to remove this paragraph?'),
-            buttons: Ext2.Msg.YESNO,
+            buttons: Ext.Msg.YESNO,
             scope: this,
             fn: function(button) {
                 if (button == 'yes') {
@@ -396,7 +396,7 @@ Kwc.Paragraphs.Panel = Ext2.extend(Kwf.Binding.AbstractPanel,
                     var params = this.getBaseParams();
                     params.id = record.get('id');
                     this._showLoading();
-                    Ext2.Ajax.request({
+                    Ext.Ajax.request({
                         url: this.controllerUrl+'/json-delete',
                         params: params,
                         success: function(response, options, r) {
@@ -427,7 +427,7 @@ Kwc.Paragraphs.Panel = Ext2.extend(Kwf.Binding.AbstractPanel,
         var params = this.getBaseParams();
         params.pos = this.addParagraphPos;
         params.component = component;
-        Ext2.Ajax.request({
+        Ext.Ajax.request({
             url: this.controllerUrl + '/json-add-paragraph',
             params: params,
             success: function(response, options, result) {
@@ -454,7 +454,7 @@ Kwc.Paragraphs.Panel = Ext2.extend(Kwf.Binding.AbstractPanel,
     onCopyParagraph: function(record) {
         var params = Kwf.clone(this.getBaseParams());
         params.id = record.get('id');
-        Ext2.Ajax.request({
+        Ext.Ajax.request({
             url: this.controllerUrl+'/json-copy',
             params: params,
             mask: this.el
@@ -464,7 +464,7 @@ Kwc.Paragraphs.Panel = Ext2.extend(Kwf.Binding.AbstractPanel,
     onPasteParagraph: function() {
         var params = Kwf.clone(this.getBaseParams());
         params.pos = this.copyPasteParagraphPos;
-        Ext2.Ajax.request({
+        Ext.Ajax.request({
             url: this.controllerUrl+'/json-paste',
             params: params,
             mask: this.el,
@@ -483,7 +483,7 @@ Kwc.Paragraphs.Panel = Ext2.extend(Kwf.Binding.AbstractPanel,
     },
 
     onCopyAllParagraphs: function() {
-        Ext2.Ajax.request({
+        Ext.Ajax.request({
             url: this.controllerUrl+'/json-copy-all',
             params: this.getBaseParams(),
             mask: this.el
@@ -491,5 +491,3 @@ Kwc.Paragraphs.Panel = Ext2.extend(Kwf.Binding.AbstractPanel,
     }
 
 });
-
-Ext2.reg('kwc.paragraphs', Kwc.Paragraphs.Panel);

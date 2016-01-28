@@ -1,7 +1,14 @@
-Ext2.fly(window).on('beforeunload', function() {
+Ext.get(window).on('beforeunload', function() {
     Kwf.Connection.isLeavingPage = true;
 });
-Kwf.Connection = Ext2.extend(Ext2.data.Connection, {
+Ext.define('Kwf.Connection', {
+    extend: 'Ext.data.Connection',
+    requires: [
+        'Ext.dom.Element',
+        'Ext.ProgressBar',
+        'Ext.window.Window',
+        'Ext.window.MessageBox'
+    ],
     _progressData    : { },
 
     /**
@@ -19,14 +26,14 @@ Kwf.Connection = Ext2.extend(Ext2.data.Connection, {
         Kwf.Connection.runningRequests++;
 
         if (options.mask) {
-            if (options.mask instanceof Ext2.Element) {
+            if (options.mask instanceof Ext.dom.Element) {
                 options.mask.mask(options.maskText || trlKwf('Loading...'));
             } else {
                 if (Kwf.Connection.masks == 0) {
-                    if (Ext2.get('loading')) {
-                        Ext2.getBody().mask();
+                    if (Ext.get('loading')) {
+                        Ext.getBody().mask();
                     } else {
-                        Ext2.getBody().mask(options.maskText || trlKwf('Loading...'));
+                        Ext.getBody().mask(options.maskText || trlKwf('Loading...'));
                     }
                 }
                 Kwf.Connection.masks++;
@@ -77,7 +84,7 @@ Kwf.Connection = Ext2.extend(Ext2.data.Connection, {
             options.params.progressNum = progressNum;
         }
 
-        var ret = Kwf.Connection.superclass.request.call(this, options);
+        var ret = this.callParent(arguments);
 
         if (options.progress) {
             this._showProgress(options);
@@ -110,12 +117,13 @@ Kwf.Connection = Ext2.extend(Ext2.data.Connection, {
             url: '/kwf/json-progress-status',
             params: { progressNum: progressNum },
             ignoreErrors: true,
-            success: function(response, options, r) {
+            success: function(response, options) {
+                var result = Ext.JSON.decode(response.responseText);
                 var progressNum = options.params.progressNum;
                 if (!this._progressData[progressNum]) return;
 
-                if (typeof r.finished != 'undefined') {
-                    if (r.finished) {
+                if (typeof result.finished != 'undefined') {
+                    if (result.finished) {
                         this._progressData[progressNum].progressBar.updateProgress(
                             1, '100%', trlKwf('Finished')
                         );
@@ -123,9 +131,9 @@ Kwf.Connection = Ext2.extend(Ext2.data.Connection, {
                     }
 
                     this._progressData[progressNum].progressBar.updateProgress(
-                        r.percent / 100,
-                        Math.floor(r.percent)+'%',
-                        r.text ? r.text : ''
+                        result.percent / 100,
+                        Math.floor(result.percent)+'%',
+                        result.text ? result.text : ''
                     );
                 }
 
@@ -140,11 +148,11 @@ Kwf.Connection = Ext2.extend(Ext2.data.Connection, {
 
     _createProgressDialog: function(cfg)
     {
-        var progressBar = new Ext2.ProgressBar({
+        var progressBar = new Ext.ProgressBar({
             text:'0%',
             animate: true
         });
-        cfg = Ext2.applyIf(cfg, {
+        cfg = Ext.applyIf(cfg, {
             title: trlKwf('Progress'),
             autoCreate : true,
             resizable:false,
@@ -161,18 +169,18 @@ Kwf.Connection = Ext2.extend(Ext2.data.Connection, {
             footer:true,
             closable:false
         });
-        var dlg = new Ext2.Window(cfg);
+        var dlg = new Ext.window.Window(cfg);
 
         if (typeof cfg.showCancel == 'undefined' || cfg.showCancel) {
             dlg.addButton(
                 { text: trlKwf('Cancel') },
                 (function(dialog) {
-                    Ext2.Ajax.abort(dialog.transId);
+                    Ext.Ajax.abort(dialog.transId);
 
                     var responseObject = Ext2.lib.Ajax.createExceptionObject(
                         dialog.transId, null, true
                     );
-                    Ext2.callback(
+                    Ext.callback(
                         dialog.requestOptions.kwfCallback.failure,
                         dialog.requestOptions.kwfCallback.scope,
                         [responseObject, dialog.requestOptions]
@@ -193,9 +201,9 @@ Kwf.Connection = Ext2.extend(Ext2.data.Connection, {
             html:'<div class="kwf-progress-content"><span class="kwf-progress-text"></span><br /></div>'
         });
         dlg.myEls.bodyEl.addClass('kwf-progress-window');
-        dlg.myEls.msgEl = Ext2.get(dlg.myEls.bodyEl.dom.childNodes[0].firstChild);
+        dlg.myEls.msgEl = Ext.get(dlg.myEls.bodyEl.dom.childNodes[0].firstChild);
 
-        dlg.progressBar = new Ext2.ProgressBar({
+        dlg.progressBar = new Ext.ProgressBar({
             renderTo:dlg.myEls.bodyEl,
             text: '0%',
             animate: true
@@ -236,13 +244,13 @@ Kwf.Connection = Ext2.extend(Ext2.data.Connection, {
         if (typeof options.params == "string") {
             encParams = options.params;
         } else {
-            encParams = Ext2.urlEncode(options.params);
+            encParams = Ext.urlEncode(options.params);
         }
         try {
             if (!response.responseText) {
                 errorMsg = 'response is empty';
             } else {
-                var r = Ext2.decode(response.responseText);
+                var r = Ext.JSON.decode(response.responseText);
             }
         } catch(e) {
             errorMsg = e.toString()+': <br />'+response.responseText;
@@ -257,7 +265,7 @@ Kwf.Connection = Ext2.extend(Ext2.data.Connection, {
                 errorText = null;
             }
             if (options.ignoreErrors) {
-                Ext2.callback(options.kwfCallback.failure, options.kwfCallback.scope, [response, options]);
+                Ext.callback(options.kwfCallback.failure, options.kwfCallback.scope, [response, options]);
             } else {
                 Kwf.handleError({
                     url: options.url,
@@ -270,7 +278,7 @@ Kwf.Connection = Ext2.extend(Ext2.data.Connection, {
                         this.connection.repeatRequest(this.options);
                     },
                     abort: function() {
-                        Ext2.callback(this.options.kwfCallback.failure, this.options.kwfCallback.scope, [this.response, this.options]);
+                        Ext.callback(this.options.kwfCallback.failure, this.options.kwfCallback.scope, [this.response, this.options]);
                     },
                     scope: { connection: this, options: options, response: response }
                 });
@@ -280,11 +288,11 @@ Kwf.Connection = Ext2.extend(Ext2.data.Connection, {
 
         if (!r.success && !options.ignoreErrors) {
             if (r.error) {
-                Ext2.Msg.alert(trlKwf('Error'), r.error);
+                Ext.Msg.alert(trlKwf('Error'), r.error);
             } else {
-                Ext2.Msg.alert(trlKwf('Error'), trlKwf("A Server failure occured."));
+                Ext.Msg.alert(trlKwf('Error'), trlKwf("A Server failure occured."));
             }
-            Ext2.callback(options.kwfCallback.failure, options.kwfCallback.scope, [response, options]);
+            Ext.callback(options.kwfCallback.failure, options.kwfCallback.scope, [response, options]);
             return;
         }
         options.kwfIsSuccess = true;
@@ -312,10 +320,10 @@ Kwf.Connection = Ext2.extend(Ext2.data.Connection, {
 
         options.kwfIsSuccess = false;
 
-        var r = Ext2.decode(response.responseText);
+        var r = Ext.JSON.decode(response.responseText);
 
         if (r && r.wrongversion && !options.ignoreErrors) {
-            var dlg = new Ext2.Window({
+            var dlg = new Ext.window.Window({
                 autoCreate : true,
                 title: trlKwf('Error - wrong version'),
                 resizable: false,
@@ -344,7 +352,7 @@ Kwf.Connection = Ext2.extend(Ext2.data.Connection, {
                 }]
             });
             dlg.show();
-            dlg.getEl().addClass('x2-window-dlg');
+            dlg.getEl().addClass('x-window-dlg');
             return;
         }
         if (r && r.login && !options.ignoreErrors) {
@@ -367,7 +375,7 @@ Kwf.Connection = Ext2.extend(Ext2.data.Connection, {
                     },
                     scope: this
                 });
-                Ext2.getBody().unmask();
+                Ext.getBody().unmask();
                 Kwf.Connection._loginDialog.showLogin();
             }
             Kwf.Connection._afterLoginRequests.push(options); //redo after login
@@ -401,7 +409,7 @@ Kwf.Connection = Ext2.extend(Ext2.data.Connection, {
             //however if displayErrors is enabled (during development) retry is possible (this is handled in Kwf.handleError)
         }
         if (options.ignoreErrors) {
-            Ext2.callback(options.kwfCallback.failure, options.kwfCallback.scope, [response, options]);
+            Ext.callback(options.kwfCallback.failure, options.kwfCallback.scope, [response, options]);
         } else {
             Kwf.handleError({
                 url: options.url,
@@ -414,7 +422,7 @@ Kwf.Connection = Ext2.extend(Ext2.data.Connection, {
                     this.repeatRequest(options);
                 },
                 abort: function() {
-                    Ext2.callback(options.kwfCallback.failure, options.kwfCallback.scope, [response, options]);
+                    Ext.callback(options.kwfCallback.failure, options.kwfCallback.scope, [response, options]);
                 },
                 scope: this
             });
@@ -428,14 +436,14 @@ Kwf.Connection = Ext2.extend(Ext2.data.Connection, {
         if (options.kwfLogin) return;
 
         if (options.mask) {
-            if (options.mask instanceof Ext2.Element) {
+            if (options.mask instanceof Ext.dom.Element) {
                 options.mask.unmask();
             } else {
                 Kwf.Connection.masks--;
                 if (Kwf.Connection.masks == 0) {
-                    Ext2.getBody().unmask();
-                    if (Ext2.get('loading')) {
-                        Ext2.get('loading').fadeOut({remove: true});
+                    Ext.getBody().unmask();
+                    if (Ext.get('loading')) {
+                        Ext.get('loading').fadeOut({remove: true});
                     }
                 }
             }
@@ -449,14 +457,14 @@ Kwf.Connection = Ext2.extend(Ext2.data.Connection, {
         if (success && !options.kwfIsSuccess) {
             success = false;
         }
-        Ext2.callback(options.kwfCallback.callback, options.kwfCallback.scope, [options, success, response]);
+        Ext.callback(options.kwfCallback.callback, options.kwfCallback.scope, [options, success, response]);
         Kwf.Connection.runningRequests--;
     }
 });
 Kwf.Connection.masks = 0; //static var that hols number of masked requests
 Kwf.Connection.runningRequests = 0;
 
-Ext2.Ajax = new Kwf.Connection({
+Ext.Ajax = new Kwf.Connection({
     /**
      * The timeout in milliseconds to be used for requests. (defaults
      * to 30000)
@@ -470,7 +478,7 @@ Ext2.Ajax = new Kwf.Connection({
      * @return {String}
      */
     serializeForm : function(form){
-        return Ext2.lib.Ajax.serializeForm(form);
+        return Ext.dom.Element.serializeForm(form);
     }
 });
 

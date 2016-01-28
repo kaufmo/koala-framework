@@ -1,7 +1,8 @@
-Ext2.ns('Kwc.LinkTag.Intern');
-Kwc.LinkTag.Intern.AnchorField = Ext2.extend(Kwf.Form.ComboBox, {
+Ext.define('Kwc.Basic.LinkTag.Intern.AnchorField', {
+    extend: 'Ext.form.field.ComboBox',
+    alias: 'widget.kwc.linktag.intern.anchor',
     afterRender: function() {
-        Kwc.LinkTag.Intern.AnchorField.superclass.afterRender.call(this);
+        this.callParent(arguments);
         var pageSelect = this.ownerCt.items.items[0];
         pageSelect.on('changevalue', function(target) {
             this.currentTarget = this.ownerCt.items.items[0].getValue();
@@ -11,10 +12,8 @@ Kwc.LinkTag.Intern.AnchorField = Ext2.extend(Kwf.Form.ComboBox, {
     },
 
     getParams : function(q){
-        var ret = Kwc.LinkTag.Intern.AnchorField.superclass.getParams.call(this, q);
+        var ret = this.callParent(arguments);
         ret.target = this.currentTarget;
         return ret;
     }
 });
-
-Ext2.reg('kwc.linktag.intern.anchor', Kwc.LinkTag.Intern.AnchorField);

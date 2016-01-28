@@ -1,11 +1,24 @@
-Ext2.namespace('Kwf.Component');
-Kwf.Component.Pages = Ext2.extend(Ext2.Panel, {
+Ext.define('Kwf.Component.Pages', {
+    extend: 'Ext.panel.Panel',
+    alias: 'widget.kwf.component.pages',
+    requires: [
+        'Ext.menu.Menu',
+        'Ext.button.Button',
+        'Kwf.Auto.TreePanel',
+        'Kwf.Auto.Filter.Text',
+        'Kwf.Auto.Form.Window',
+        'Ext.menu.Item',
+        'Kwf.Component.ComponentPanel',
+        'Ext.Action',
+        'Ext.tab.Panel',
+        'Ext.window.MessageBox'
+    ],
     initComponent : function()
     {
         this.actions = {};
         this.componentConfigs = {};
 
-        this.pageButtonMenu = new Ext2.menu.Menu({
+        this.pageButtonMenu = new Ext.menu.Menu({
             items    : [
                 '-',
                 this.getAction('properties'),
@@ -18,8 +31,8 @@ Kwf.Component.Pages = Ext2.extend(Ext2.Panel, {
                 this.getAction('preview')
             ]
         });
-        this.pageButton = new Ext2.Toolbar.Button({
-            cls     : 'x2-btn-text-icon bmenu',
+        this.pageButton = new Ext.Button({
+            cls     : 'x-btn-text-icon bmenu',
             text    : trlKwf('Page'),
             menu    : this.pageButtonMenu,
             icon    : '/assets/silkicons/page.png',
@@ -39,7 +52,7 @@ Kwf.Component.Pages = Ext2.extend(Ext2.Panel, {
             tbar: []
         });
         
-        var tbar = this.treePanel.getTopToolbar();
+        var tbar = this.treePanel.getDockedItems('toolbar[dock="top"]')[0];
         tbar.add(this.pageButton);
 
         tbar.add('-');
@@ -58,20 +71,20 @@ Kwf.Component.Pages = Ext2.extend(Ext2.Panel, {
         tbar.add(this.treePanel.getAction('reload'));
         
         this.treePanel.onMoved = function (response) {
-            this.tree.getRootNode().reload();
+            this.tree.getStore().reload();
         };
 
-        this.contentTabPanel = new Ext2.TabPanel({
-            region      : 'center'
+        this.contentTabPanel = new Ext.TabPanel({
+            region: 'center'
         });
-        this.contentTabPanel.on('render', function() {
-            this.contentTabPanel.strip.setHeight(24);
-        }, this);
+        //this.contentTabPanel.on('render', function() {
+        //    this.contentTabPanel.getTabBar().setHeight(24);
+        //}, this);
 
         this.layout = 'border';
         this.items = [this.treePanel, this.contentTabPanel];
 
-        Kwf.Component.Pages.superclass.initComponent.call(this);
+        this.callParent(arguments);
 
         this.treePanel.on('loaded', this.onTreePanelLoaded, this);
         this.setupEditform();
@@ -119,12 +132,13 @@ Kwf.Component.Pages = Ext2.extend(Ext2.Panel, {
 
     onTreePanelLoaded : function(tree)
     {
-        tree.loader.on('load', function(tree, node, response) {
-            var result = Ext2.decode(response.responseText);
-            Ext2.applyIf(this.componentConfigs, result.componentConfigs);
+        tree.getStore().on('load', function(store, records, success, operation, node) {
+            var result = Ext.decode(operation.getResponse().responseText);
+            Ext.applyIf(this.componentConfigs, result.componentConfigs);
         }, this);
 
-        this.contextMenu = new Ext2.menu.Menu({
+        this.contextMenu = new Ext.menu.Menu({
+            floating: true,
              items: [
                 '-',
                 this.getAction('properties'),
@@ -138,14 +152,22 @@ Kwf.Component.Pages = Ext2.extend(Ext2.Panel, {
             ]
         });
 
-        tree.on('click', this.treeSelectionchange, this);
-        tree.on('contextmenu', function (node) {
-            node.select();
+        tree.on('itemclick', function(tree, record, item) {
+            var node = this.treePanel.getTree().getStore().getNodeById(record.get('id'));
             this.treeSelectionchange(node);
-            this.contextMenu.show(node.ui.getAnchor());
+        }, this);
+        tree.on('itemcontextmenu', function (tree, record, item, index, e) {
+            e.stopEvent();
+            var node = this.treePanel.getTree().getStore().getNodeById(record.get('id'));
+            this.treePanel.getTree().getSelectionModel().select(node);
+            this.treeSelectionchange(node);
+
+            item = Ext.get(item);
+            this.contextMenu.showBy(item.down('.x-tree-node-text'), 'bl');
+            return false;
         }, this);
 
-        tree.on('dblclick', function (o, e) {
+        tree.on('itemdblclick', function (tree, record, item, index, e) {
             var i = this.contextMenu.items.first();
             if (i && i.handler) {
                 i.handler.call(i.scope, i, e);
@@ -156,7 +178,7 @@ Kwf.Component.Pages = Ext2.extend(Ext2.Panel, {
 
     treeSelectionchange : function (node) {
         if (!node) return;
-        var data = node.attributes;
+        var data = node.data;
         
         if (data.disabled) {
             this.pageButton.disable();
@@ -187,42 +209,42 @@ Kwf.Component.Pages = Ext2.extend(Ext2.Panel, {
             var editKey = editComponent.componentId;
             var actionKey = editComponent.componentClass+'-'+editComponent.type;
             if (!this.editActions[editKey+actionKey]) {
-                this.editActions[editKey+actionKey] = new Ext2.Action({
+                this.editActions[editKey+actionKey] = new Ext.Action({
                     text    : this.componentConfigs[actionKey].title,
                     handler : function (o, e) {
-                        var node = this.treePanel.tree.getSelectionModel().getSelectedNode();
-                        node.attributes.editComponents.each(function(editComponent) {
+                        var node = this.treePanel.tree.getSelectionModel().getSelection()[0];
+                        node.data.editComponents.each(function(editComponent) {
                             if (editComponent.componentId+editComponent.componentClass+'-'+editComponent.type == o.editKey+o.actionKey) {
                                 this.loadComponent({
                                     id: editComponent.componentId,
                                     componentClass: editComponent.componentClass,
                                     type: editComponent.type,
-                                    text: node.text,
-                                    icon: node.attributes.bIcon,
-                                    editComponents: node.attributes.editComponents,
-                                    pageId: node.attributes.id
+                                    text: node.get('text'),
+                                    icon: node.get('icon'),
+                                    editComponents: node.get('editComponents'),
+                                    pageId: node.get('id')
                                 });
                                 return false;
                             }
                         }, this);
                     },
                     icon    : this.componentConfigs[actionKey].icon,
-                    cls     : 'x2-btn-text-icon',
+                    cls     : 'x-btn-text-icon',
                     scope   : this,
                     actionKey: actionKey,
                     editKey: editKey
                 });
             }
             this.editActions[editKey+actionKey].setDisabled(data.disabled);
-            this.contextMenu.insert(actionsAdded, new Ext2.menu.Item(this.editActions[editKey+actionKey]));
-            this.pageButtonMenu.insert(actionsAdded, new Ext2.menu.Item(this.editActions[editKey+actionKey]));
+            this.contextMenu.insert(actionsAdded, new Ext.menu.Item(this.editActions[editKey+actionKey]));
+            this.pageButtonMenu.insert(actionsAdded, new Ext.menu.Item(this.editActions[editKey+actionKey]));
             actionsAdded++;
         }, this);
     },
 
     loadComponent: function(data)
     {
-        var panel = this.contentTabPanel.getItem('page'+data.pageId);
+        var panel = this.contentTabPanel.items.getByKey('page'+data.pageId)
         if (!panel) {
             panel = this.createComponentPanel(data);
             this.contentTabPanel.add(panel);
@@ -243,6 +265,7 @@ Kwf.Component.Pages = Ext2.extend(Ext2.Panel, {
 
     createComponentPanel: function(data)
     {
+        console.log('createComponentPanel', this.componentConfigs);
         var panel = new Kwf.Component.ComponentPanel({
             id          : 'page'+data.pageId,
             title       : data.text,
@@ -267,93 +290,93 @@ Kwf.Component.Pages = Ext2.extend(Ext2.Panel, {
         if (this.actions[type]) return this.actions[type];
 
         if (type == 'properties') {
-            this.actions[type] = new Ext2.Action({
+            this.actions[type] = new Ext.Action({
                 text    : trlKwf('Page properties'),
                 handler : function () {
                     this._removeEditDialogForm();
-                    var node = this.treePanel.tree.selModel.selNode;
+                    var node = this.treePanel.tree.getSelectionModel().getSelection()[0];
                     this.editDialog.getAutoForm().setBaseParams({});
-                    this.editDialog.showEdit(node.id);
+                    this.editDialog.showEdit(node.get('id'));
                 },
                 icon    : '/assets/silkicons/page_gear.png',
-                cls     : 'x2-btn-text-icon',
+                cls     : 'x-btn-text-icon',
                 scope   : this
             });
         } else if (type == 'add') {
-            this.actions[type] = new Ext2.Action({
+            this.actions[type] = new Ext.Action({
                 text    : trlKwf('Add new child page'),
                 handler : function () {
                     this._removeEditDialogForm();
-                    var node = this.treePanel.tree.selModel.selNode;
+                    var node = this.treePanel.tree.getSelectionModel().getSelection()[0];
                     this.editDialog.getAutoForm().setBaseParams({
                         parent_id: node.id
                     });
                     this.editDialog.showAdd();
                 },
                 icon    : '/assets/silkicons/page_add.png',
-                cls     : 'x2-btn-text-icon',
+                cls     : 'x-btn-text-icon',
                 scope   : this
             });
         } else if (type == 'delete') {
-            this.actions[type] = new Ext2.Action({
+            this.actions[type] = new Ext.Action({
                 text    : trlKwf('Delete Page'),
                 handler : function() {
                     this.treePanel.onDelete();
                 },
                 icon    : '/assets/silkicons/page_delete.png',
-                cls     : 'x2-btn-text-icon',
+                cls     : 'x-btn-text-icon',
                 scope   : this
             });
         } else if (type == 'copy') {
-            this.actions[type] = new Ext2.Action({
+            this.actions[type] = new Ext.Action({
                 text    : trlKwf('Copy Page'),
                 handler : function() {
                     this.onCopy();
                 },
                 icon    : '/assets/silkicons/page_copy.png',
-                cls     : 'x2-btn-text-icon',
+                cls     : 'x-btn-text-icon',
                 scope   : this
             });
         } else if (type == 'paste') {
-            this.actions[type] = new Ext2.Action({
+            this.actions[type] = new Ext.Action({
                 text    : trlKwf('Paste Page'),
                 handler : function() {
                     this.onPaste();
                 },
                 icon    : '/assets/silkicons/page_paste.png',
-                cls     : 'x2-btn-text-icon',
+                cls     : 'x-btn-text-icon',
                 scope   : this
             });
         } else if (type == 'visible') {
-            this.actions[type] = new Ext2.Action({
+            this.actions[type] = new Ext.Action({
                 text    : trlKwf('Show / Hide Page'),
                 handler : function() {
                     this.treePanel.onVisible();
                 },
                 icon    : '/assets/fx_invisible/silkicons/page.png',
-                cls     : 'x2-btn-text-icon',
+                cls     : 'x-btn-text-icon',
                 scope   : this
             });
         } else if (type == 'makeHome') {
-            this.actions[type] = new Ext2.Action({
+            this.actions[type] = new Ext.Action({
                 text    : trlKwf('Use as homepage'),
                 handler : function (o, e) {
-                    Ext2.Msg.show({
+                    Ext.Msg.show({
                         title: trlKwf('Use as homepage'),
                         msg: trlKwf('Attention! You are about to set the selected page as the homepage of your website. This may affect the entire website. Do you wish to proceed?'),
-                        buttons: Ext2.Msg.YESNO,
-                        icon: Ext2.MessageBox.WARNING,
+                        buttons: Ext.Msg.YESNO,
+                        icon: Ext.MessageBox.WARNING,
                         fn: function(btn, text) {
                             if (btn == 'yes') {
-                                Ext2.Ajax.request({
+                                Ext.Ajax.request({
                                     url: '/admin/component/pages/json-make-home',
                                     success: function(r) {
-                                        response = Ext2.decode(r.responseText);
-                                        var oldhome = this.treePanel.tree.getNodeById(response.oldhome);
-                                        oldhome.attributes.visible = response.oldhomeVisible;
+                                        response = Ext.decode(r.responseText);
+                                        var oldhome = this.treePanel.getTree().getStore().getNodeById(response.oldhome);
+                                        oldhome.data.visible = response.oldhomeVisible;
                                         this.treePanel.setVisible(oldhome);
                                         oldhome.ui.iconNode.style.backgroundImage = 'url(/assets/silkicons/page.png)';
-                                        var home = this.treePanel.tree.getNodeById(response.home);
+                                        var home = this.treePanel.getTree().getStore().getNodeById(response.home);
                                         home.ui.iconNode.style.backgroundImage = 'url(/assets/silkicons/application_home.png)';
                                     },
                                     params: {id: this.treePanel.tree.getSelectionModel().getSelectedNode().id },
@@ -365,34 +388,34 @@ Kwf.Component.Pages = Ext2.extend(Ext2.Panel, {
                     });
                 },
                 icon    : '/assets/silkicons/application_home.png',
-                cls     : 'x2-btn-text-icon',
+                cls     : 'x-btn-text-icon',
                 scope   : this
             });
         } else if (type == 'expand') {
-            this.actions[type] = new Ext2.Action({
+            this.actions[type] = new Ext.Action({
                 text    : trlKwf('Expand here'),
                 handler : function () { this.treePanel.tree.getSelectionModel().getSelectedNode().expand(true); },
                 icon    : '/assets/silkicons/bullet_add.png',
-                cls     : 'x2-btn-text-icon',
+                cls     : 'x-btn-text-icon',
                 scope   : this
             });
         } else if (type == 'collapse') {
-            this.actions[type] = new Ext2.Action({
+            this.actions[type] = new Ext.Action({
                 text    : trlKwf('Collapse here'),
                 handler : function () { this.treePanel.tree.getSelectionModel().getSelectedNode().collapse(true); },
                 icon    : '/assets/silkicons/bullet_delete.png',
-                cls     : 'x2-btn-text-icon',
+                cls     : 'x-btn-text-icon',
                 scope   : this
             });
         } else if (type == 'preview') {
-            this.actions[type] = new Ext2.Action({
+            this.actions[type] = new Ext.Action({
                 text    : trlKwf('Open preview'),
                 handler : function () {
                     window.open('/admin/component/pages/open-preview?page_id='+
                                 this.treePanel.getSelectedId());
                 },
                 icon    : '/assets/silkicons/page_white_magnify.png',
-                cls     : 'x2-btn-text-icon',
+                cls     : 'x-btn-text-icon',
                 scope   : this
             });
         } else {
@@ -402,9 +425,9 @@ Kwf.Component.Pages = Ext2.extend(Ext2.Panel, {
     },
 
     onCopy: function(o, e) {
-        Ext2.Ajax.request({
+        Ext.Ajax.request({
             url: this.treePanel.controllerUrl + '/json-copy',
-            params: Ext2.apply({id:this.treePanel.getSelectedId()}, this.treePanel.getBaseParams()),
+            params: Ext.apply({id:this.treePanel.getSelectedId()}, this.treePanel.getBaseParams()),
             mask: this.el,
             success: function(response, options, result) {
             },
@@ -413,9 +436,9 @@ Kwf.Component.Pages = Ext2.extend(Ext2.Panel, {
     },
 
     onPaste: function() {
-        Ext2.Ajax.request({
+        Ext.Ajax.request({
             url: this.treePanel.controllerUrl + '/json-paste',
-            params: Ext2.apply({id:this.treePanel.getSelectedId()}, this.treePanel.getBaseParams()),
+            params: Ext.apply({id:this.treePanel.getSelectedId()}, this.treePanel.getBaseParams()),
             timeout: 5*60*1000,
             progress: true,
             progressTitle : trlKwf('Paste Page'),
@@ -428,5 +451,3 @@ Kwf.Component.Pages = Ext2.extend(Ext2.Panel, {
     }
 
 });
-
-Ext2.reg('kwf.component.pages', Kwf.Component.Pages);

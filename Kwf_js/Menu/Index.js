@@ -1,33 +1,38 @@
-Ext2.namespace('Kwf.Menu');
-
-Kwf.Menu.Index = Ext2.extend(Ext2.Toolbar,
-{
+Ext.define('Kwf.Menu.Index', {
+    extend: 'Ext.toolbar.Toolbar',
+    alias: 'widget.kwf.menu',
+    requires: [
+        'Ext.button.Button',
+        'Ext.toolbar.Fill',
+        'Ext.toolbar.Spacer',
+        'Ext.menu.Menu',
+        'Ext.form.field.ComboBox',
+        'Kwf.Auto.Form.Window'
+    ],
+    cls: 'kwf-ext-menu',
     controllerUrl: '/kwf/user/menu',
     changeUserUrl: '/kwf/user/changeUser',
     changeUserTpl: ['<tpl for=".">',
-                        '<div class="x2-combo-list-item changeuser-list-item">',
+                        '<div class="x-boundlist-item changeuser-list-item">',
                             '<h3>{lastname}&nbsp;{firstname}</h3>',
                             '{email} <span class="changeuser-role">({role})</span>',
                         '</div>',
                       '</tpl>'],
     changeUserHeight: 350,
-    changeUserWidth: 280,
+    changeUserWidth: 300,
 
     initComponent : function()
     {
-        this.addEvents(
-            'menuevent'
-        );
-        Kwf.Menu.Index.superclass.initComponent.call(this);
+        this.callParent(arguments);
 
     },
     afterRender: function() {
-        Kwf.Menu.Index.superclass.afterRender.call(this);
+        this.callParent(arguments);
         this.reload();
     },
     reload: function()
     {
-        Ext2.Ajax.request({
+        Ext.Ajax.request({
             url: this.controllerUrl+'/json-data',
             params: this.params,
             success: this.loadMenu,
@@ -42,7 +47,7 @@ Kwf.Menu.Index = Ext2.extend(Ext2.Toolbar,
             var subMenu = m.menuConfig;
             if (m.type == 'dropdown') {
                 var childMenuItems = this._processMenus(m.children);
-                var menu = new Ext2.menu.Menu({
+                var menu = new Ext.menu.Menu({
                     items: childMenuItems
                 });
                 subMenu.menu = menu;
@@ -97,7 +102,7 @@ Kwf.Menu.Index = Ext2.extend(Ext2.Toolbar,
                     panel.id = 'mainPanel';
                     Kwf.currentViewport.add(panel);
                     Kwf.currentViewport.layout.rendered = false;
-                    Kwf.currentViewport.doLayout();
+                    Kwf.currentViewport.updateLayout();
                 };
                 subMenu.scope = this;
                 subMenu.commandClass = m.commandClass;
@@ -112,27 +117,29 @@ Kwf.Menu.Index = Ext2.extend(Ext2.Toolbar,
         }
         return menuItems;
     },
-    loadMenu: function(response, options, result)
+    loadMenu: function(response, options)
     {
+        var result = Ext.JSON.decode(response.responseText);
+
         this.items.each(function(i) {
             i.destroy();
         });
         var menuItems = this._processMenus(result.menus);
         menuItems.each(function(menuItem) {
             if (menuItem.icon && menuItem.text) {
-                menuItem.cls = 'x2-btn-text-icon';
+                menuItem.cls = 'x-btn-text-icon';
             } else if (menuItem.icon) {
-                menuItem.cls = 'x2-btn-icon';
+                menuItem.cls = 'x-btn-icon';
             }
             this.add(menuItem);
         }, this);
 
-        this.add(new Ext2.Toolbar.Fill());
+        this.add(new Ext.Toolbar.Fill());
 
-        this.showUserMenu = new Ext2.Button({
+        this.showUserMenu = new Ext.Button({
             id: 'userMenu',
             tooltip: trlKwf('Show User Menu'),
-            cls: 'x2-btn-icon',
+            cls: 'x-btn-icon',
             icon: '/assets/silkicons/bullet_arrow_down.png',
             handler: function() {
                 if (!this.userToolbar.isVisible()) {
@@ -148,7 +155,7 @@ Kwf.Menu.Index = Ext2.extend(Ext2.Toolbar,
         this.add(this.showUserMenu);
 
         if (result.changeUser) {
-            var changeUser = new Kwf.Form.ComboBox({
+            var changeUser = Ext.create('Ext.form.field.ComboBox', {
                 store: {
                     url: this.changeUserUrl+'/json-data'
                 },
@@ -159,16 +166,19 @@ Kwf.Menu.Index = Ext2.extend(Ext2.Toolbar,
                 triggerAction: 'all',
                 width: 120,
                 maxHeight: this.changeUserHeight,
-                listWidth: this.changeUserWidth,
-                tpl: new Ext2.XTemplate(
-                        this.changeUserTpl
-                      )
+                matchFieldWidth: false,
+                listConfig: {
+                    width: this.changeUserWidth
+                },
+                tpl: new Ext.XTemplate(
+                    this.changeUserTpl
+                )
             });
             changeUser.on('render', function(combo) {
                 combo.setRawValue(result.fullname);
             }, this, {delay: 10});
             changeUser.on('select', function(combo, record, index) {
-                Ext2.Ajax.request({
+                Ext.Ajax.request({
                     url: this.changeUserUrl+'/json-change-user',
                     params: { userId: record.id },
                     success: function() {
@@ -183,7 +193,7 @@ Kwf.Menu.Index = Ext2.extend(Ext2.Toolbar,
             this.add('-');
         }
 
-        this.userToolbar = new Ext2.Toolbar({
+        this.userToolbar = new Ext.Toolbar({
             renderTo: this.el,
             style: 'position:absolute;right:0'
         });
@@ -192,7 +202,7 @@ Kwf.Menu.Index = Ext2.extend(Ext2.Toolbar,
             this.userToolbar.add({
                 id: 'currentUser',
                 text: result.fullname,
-                cls: 'x2-btn-text-icon',
+                cls: 'x-btn-text-icon',
                 icon: '/assets/silkicons/user.png',
                 disabled: !result.userId,
                 handler: function() {
@@ -211,11 +221,11 @@ Kwf.Menu.Index = Ext2.extend(Ext2.Toolbar,
         }
         if (result.showLogout) {
             this.userToolbar.add({
-                cls: 'x2-btn-icon',
+                cls: 'x-btn-icon',
                 tooltip: trlKwf('Logout'),
                 icon: '/assets/silkicons/door_out.png',
                 handler: function() {
-                    Ext2.Ajax.request({
+                    Ext.Ajax.request({
                         url : '/kwf/user/login/json-logout-user',
                         success : function(form, action) {
                             //nicht reload, weil user nach erneutem login vielleicht
@@ -229,7 +239,7 @@ Kwf.Menu.Index = Ext2.extend(Ext2.Toolbar,
             });
         }
         this.userToolbar.add({
-            cls: 'x2-btn-icon',
+            cls: 'x-btn-icon',
             icon: '/assets/kwf/images/information.png',
             tooltip: trlKwf('Information'),
             handler: function() {
@@ -246,7 +256,7 @@ Kwf.Menu.Index = Ext2.extend(Ext2.Toolbar,
             //single frontend urls
             this.add({
                 tooltip: trlKwf('Open frontend in a new window'),
-                cls: 'x2-btn-icon',
+                cls: 'x-btn-icon',
                 icon: '/assets/silkicons/world.png',
                 handler: function() {
                     window.open(result.frontendUrls[0].href);
@@ -259,7 +269,7 @@ Kwf.Menu.Index = Ext2.extend(Ext2.Toolbar,
             result.frontendUrls.each(function(url) {
                 frontendItems.push({
                     text: url.text,
-                    cls: 'x2-btn-text-icon',
+                    cls: 'x-btn-text-icon',
                     icon: '/assets/silkicons/world.png',
                     tooltip: trlKwf('Open frontend in a new window'),
                     handler: function(options) {
@@ -271,13 +281,12 @@ Kwf.Menu.Index = Ext2.extend(Ext2.Toolbar,
             }, this);
             this.add({
                 tooltip: trlKwf('Open frontend in a new window'),
-                cls: 'x2-btn-icon',
+                cls: 'x-btn-icon',
                 icon: '/assets/silkicons/world.png',
-                menu: new Ext2.menu.Menu({
+                menu: new Ext.menu.Menu({
                     items: frontendItems
                 })
             });
         }
     }
 });
-Ext2.reg('kwf.menu', Kwf.Menu.Index);

@@ -1,10 +1,12 @@
-
-Ext2.namespace("Kwf.User.Grid");
-
-Kwf.User.Grid.Grid = Ext2.extend(Kwf.Auto.GridPanel,
-{
+Ext.define('Kwf.User.Grid.Grid', {
+    extend: 'Kwf.Auto.GridPanel',
+    requires: [
+        'Kwf.User.Grid.SendMailWindow',
+        'Ext.Action',
+        'Ext.window.MessageBox'
+    ],
     initComponent: function() {
-        Kwf.User.Grid.Grid.superclass.initComponent.call(this);
+        this.callParent(arguments);
         if (!this.columnsConfig) this.columnsConfig = { };
         this.columnsConfig['resend_mails'] = {
             clickHandler: function(grid, rowIndex, col, e) {
@@ -18,20 +20,20 @@ Kwf.User.Grid.Grid = Ext2.extend(Kwf.Auto.GridPanel,
             scope: this
         };
 
-        this.actions.userdelete = new Ext2.Action({
+        this.actions.userdelete = new Ext.Action({
             text    : trlKwf('Delete user'),
             icon    : '/assets/silkicons/delete.png',
-            cls     : 'x2-btn-text-icon',
+            cls     : 'x-btn-text-icon',
             handler : this.onDelete,
             scope: this
         });
     },
 
     onDelete : function() {
-        Ext2.Msg.show({
+        Ext.Msg.show({
             title: trlKwf('Delete user'),
             msg: trlKwf('Do you really wish to delete this user?'),
-            buttons: Ext2.Msg.YESNO,
+            buttons: Ext.Msg.YESNO,
             scope: this,
             fn: function(button) {
                 if (button == 'yes') {
@@ -49,7 +51,7 @@ Kwf.User.Grid.Grid = Ext2.extend(Kwf.Auto.GridPanel,
                     params[this.store.reader.meta.id] = ids.join(';');
 
                     this.el.mask(trlKwf('Deleting...'));
-                    Ext2.Ajax.request({
+                    Ext.Ajax.request({
                         url: this.controllerUrl+'/json-user-delete',
                         params: params,
                         success: function(response, options, r) {
